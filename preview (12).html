@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>גלריה אופקית</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      padding: 40px 20px;
+    }
+
+    .gallery {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 25px;
+    }
+
+    .slider-wrap {
+      position: relative;
+      overflow: hidden;
+      padding: 10px 60px;
+    }
+
+    .track {
+      display: flex;
+      gap: 20px;
+      transition: transform 0.5s ease;
+    }
+
+    .card {
+      min-width: calc((100% - 40px) / 3);
+      height: 360px;
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      background: #111827;
+      box-shadow: 0 14px 35px rgba(0,0,0,0.28);
+      flex-shrink: 0;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 55%);
+      display: flex;
+      align-items: flex-end;
+      padding: 18px;
+    }
+
+    .overlay h3 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 46px;
+      height: 46px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      background: rgba(255,255,255,0.18);
+      color: white;
+      font-size: 22px;
+      backdrop-filter: blur(8px);
+      z-index: 2;
+    }
+
+    .prev { right: 5px; }
+    .next { left: 5px; }
+
+    .nav:hover {
+      background: rgba(255,255,255,0.28);
+    }
+
+    @media (max-width: 900px) {
+      .card { min-width: calc((100% - 20px) / 2); }
+    }
+
+    @media (max-width: 600px) {
+      .slider-wrap { padding: 10px 50px; }
+      .card { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery">
+    <div class="title">גלריה אופקית מודרנית</div>
+    <div class="slider-wrap">
+      <button class="nav prev">❯</button>
+      <button class="nav next">❮</button>
+
+      <div class="track" id="track1">
+        <div class="card"><img src="https://picsum.photos/id/1015/800/600"><div class="overlay"><h3>תמונה 1</h3></div></div>
+        <div class="card"><img src="https://picsum.photos/id/1016/800/600"><div class="overlay"><h3>תמונה 2</h3></div></div>
+        <div class="card"><img src="https://picsum.photos/id/1018/800/600"><div class="overlay"><h3>תמונה 3</h3></div></div>
+        <div class="card"><img src="https://picsum.photos/id/1020/800/600"><div class="overlay"><h3>תמונה 4</h3></div></div>
+        <div class="card"><img src="https://picsum.photos/id/1024/800/600"><div class="overlay"><h3>תמונה 5</h3></div></div>
+        <div class="card"><img src="https://picsum.photos/id/1035/800/600"><div class="overlay"><h3>תמונה 6</h3></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const track1 = document.getElementById('track1');
+    const prev1 = document.querySelector('.prev');
+    const next1 = document.querySelector('.next');
+    const cards1 = track1.children;
+    let index1 = 0;
+
+    function visibleCount1() {
+      if (window.innerWidth <= 600) return 1;
+      if (window.innerWidth <= 900) return 2;
+      return 3;
+    }
+
+    function updateSlider1() {
+      const gap = 20;
+      const cardWidth = cards1[0].offsetWidth + gap;
+      track1.style.transform = `translateX(${index1 * cardWidth}px)`;
+    }
+
+    prev1.addEventListener('click', () => {
+      const maxIndex = cards1.length - visibleCount1();
+      if (index1 < maxIndex) index1++;
+      updateSlider1();
+    });
+
+    next1.addEventListener('click', () => {
+      if (index1 > 0) index1--;
+      updateSlider1();
+    });
+
+    window.addEventListener('resize', updateSlider1);
+  </script>
+</body>
+</html>
