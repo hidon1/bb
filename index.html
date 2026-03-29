@@ -145,7 +145,7 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
-                const res = await fetch('https://billowing-resonance-9962.zm0548407450.workers.dev/', {
+                const res = await fetch('https://noisy-dust-c360.zm0548407450.workers.dev/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ messages: messages })
