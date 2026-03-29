@@ -260,7 +260,20 @@
     </style>
 </head>
 <body>
-    <div class="app-shell">
+    <div id="auth-banner" class="max-w-5xl mx-auto mt-8 p-6 bg-white/95 border border-slate-200 rounded-3xl shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-semibold text-slate-900">התחברות לחשבון</h2>
+                <p class="text-slate-600 mt-1">כדי לשמור את כל השיחות שלך ב-Firebase Firestore, צריך להתחבר עם Google.</p>
+            </div>
+            <button id="google-login-btn" class="bg-white border border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 text-slate-800 rounded-full px-5 py-3 inline-flex items-center gap-2 self-start sm:self-auto">
+                <i class="fa-brands fa-google text-red-500"></i>
+                התחבר עם Google
+            </button>
+        </div>
+    </div>
+
+    <div id="app-shell" class="app-shell hidden">
         <aside class="history-panel p-4">
             <button onclick="createNewChat()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 shadow-md shadow-indigo-200">
                 <i class="fa-solid fa-plus"></i>
@@ -283,6 +296,13 @@
                     </div>
                 </div>
                 <div class="relative header-actions">
+                    <div id="user-chip" class="hidden items-center gap-2 text-xs bg-slate-100 border border-slate-200 rounded-full px-3 py-2">
+                        <i class="fa-regular fa-user"></i>
+                        <span id="user-email"></span>
+                    </div>
+                    <button id="logout-btn" class="ghost-btn hidden">
+                        <i class="fa-solid fa-right-from-bracket ml-1"></i> התנתק
+                    </button>
                     <button onclick="duplicateCurrentChat()" class="ghost-btn">
                         <i class="fa-regular fa-clone ml-1"></i> שכפל שיחה
                     </button>
@@ -329,13 +349,55 @@
         </div>
     </div>
 
-    <script>
-        const STORAGE_KEY = 'grok_chats_v2';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+        import {
+            getAuth,
+            GoogleAuthProvider,
+            signInWithPopup,
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            doc,
+            onSnapshot,
+            orderBy,
+            query,
+            setDoc
+        } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmkioVK9XKo2LJhN8EysPULxIpX81URR4",
+            authDomain: "aiai-f4c2a.firebaseapp.com",
+            projectId: "aiai-f4c2a",
+            storageBucket: "aiai-f4c2a.firebasestorage.app",
+            messagingSenderId: "815268198210",
+            appId: "1:815268198210:web:214f510503e602327afadb",
+            measurementId: "G-XPE90F1LS9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
 
         let chats = [];
         let activeChatId = null;
         let requestCounter = 0;
+        let currentUser = null;
+        let unsubscribeChats = null;
+        const pendingByChat = new Map();
 
+        const authBanner = document.getElementById('auth-banner');
+        const appShell = document.getElementById('app-shell');
+        const loginButton = document.getElementById('google-login-btn');
+        const logoutButton = document.getElementById('logout-btn');
+        const userChip = document.getElementById('user-chip');
+        const userEmail = document.getElementById('user-email');
         const chatMessages = document.getElementById('chat-messages');
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
@@ -351,37 +413,53 @@
             return chats.find(chat => chat.id === activeChatId);
         }
 
-        function saveChats() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
-            renderChatList();
+        async function saveChatDoc(chat) {
+            if (!currentUser) return;
+            const safeMessages = Array.isArray(chat.messages) ? chat.messages : [];
+            await setDoc(doc(db, 'users', currentUser.uid, 'chats', chat.id), {
+                title: chat.title || 'שיחה חדשה',
+                updatedAt: Date.now(),
+                createdAt: chat.createdAt || Date.now(),
+                messages: safeMessages
+            }, { merge: true });
         }
 
-        function loadChats() {
-            try {
-                chats = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-            } catch (_) {
-                chats = [];
-            }
+        function subscribeToChats() {
+            if (!currentUser) return;
+            if (unsubscribeChats) unsubscribeChats();
 
-            if (!chats.length) {
-                const starter = {
-                    id: crypto.randomUUID(),
-                    title: 'שיחה חדשה',
-                    updatedAt: Date.now(),
-                    messages: [],
-                    pendingRequests: 0
-                };
-                chats.push(starter);
-            }
+            const chatsQuery = query(
+                collection(db, 'users', currentUser.uid, 'chats'),
+                orderBy('updatedAt', 'desc')
+            );
 
-            chats = chats.map(chat => ({
-                pendingRequests: 0,
-                ...chat
-            }));
+            unsubscribeChats = onSnapshot(chatsQuery, async (snapshot) => {
+                chats = snapshot.docs.map((item) => {
+                    const data = item.data();
+                    return {
+                        id: item.id,
+                        title: data.title || 'שיחה חדשה',
+                        updatedAt: Number(data.updatedAt) || Date.now(),
+                        createdAt: Number(data.createdAt) || Date.now(),
+                        messages: Array.isArray(data.messages) ? data.messages : []
+                    };
+                });
 
-            activeChatId = chats[0].id;
-            renderChatList();
-            renderMessages();
+                if (!chats.length) {
+                    await createNewChat();
+                    return;
+                }
+
+                if (!activeChatId || !chats.some(chat => chat.id === activeChatId)) {
+                    activeChatId = chats[0].id;
+                }
+
+                renderChatList();
+                renderMessages();
+            }, (error) => {
+                console.error('Firestore listener error:', error);
+                alert('שגיאה בטעינת השיחות מ-Firebase. בדוק הרשאות Firestore.');
+            });
         }
 
         function renderChatList() {
@@ -391,13 +469,15 @@
             chatList.innerHTML = chats.map(chat => {
                 const isActive = chat.id === activeChatId;
                 const subtitle = chat.messages[0]?.content?.slice(0, 26) || 'אין הודעות עדיין';
-                return `<div class="chat-item ${isActive ? 'active' : ''} ${chat.pendingRequests ? 'loading' : ''}" onclick="switchChat('${chat.id}')">
+                const pendingRequests = pendingByChat.get(chat.id) || 0;
+
+                return `<div class="chat-item ${isActive ? 'active' : ''} ${pendingRequests ? 'loading' : ''}" onclick="switchChat('${chat.id}')">
                     <div class="font-medium text-sm text-slate-800">
                         ${escapeHtml(chat.title)}
-                        ${chat.pendingRequests ? '<span class="status-pill waiting"><i class="fa-solid fa-rotate fa-spin"></i> חושב</span>' : ''}
+                        ${pendingRequests ? '<span class="status-pill waiting"><i class="fa-solid fa-rotate fa-spin"></i> חושב</span>' : ''}
                     </div>
                     <div class="text-xs text-slate-500 mt-1">${escapeHtml(subtitle)}</div>
-                    ${chat.pendingRequests ? '<div class="typing-min"><span></span><span></span><span></span></div>' : ''}
+                    ${pendingRequests ? '<div class="typing-min"><span></span><span></span><span></span></div>' : ''}
                 </div>`;
             }).join('');
         }
@@ -408,21 +488,21 @@
             renderMessages();
         }
 
-        function createNewChat() {
+        async function createNewChat() {
+            if (!currentUser) return;
             const chat = {
                 id: crypto.randomUUID(),
                 title: `שיחה חדשה ${chats.length + 1}`,
                 updatedAt: Date.now(),
-                messages: [],
-                pendingRequests: 0
+                createdAt: Date.now(),
+                messages: []
             };
-            chats.unshift(chat);
+
             activeChatId = chat.id;
-            saveChats();
-            renderMessages();
+            await saveChatDoc(chat);
         }
 
-        function addMessage(role, content, chatId = activeChatId) {
+        async function addMessage(role, content, chatId = activeChatId) {
             const currentChat = chats.find(chat => chat.id === chatId);
             if (!currentChat) return;
             currentChat.messages.push({ role, content });
@@ -430,7 +510,8 @@
                 currentChat.title = content.slice(0, 34);
             }
             currentChat.updatedAt = Date.now();
-            saveChats();
+            await saveChatDoc(currentChat);
+
             if (chatId === activeChatId) {
                 renderMessages();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -513,91 +594,23 @@
                 .replace(/'/g, '&#039;');
         }
 
-        window.copyCode = function(button) {
-            const text = button.closest('.code-card').querySelector('pre code').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const original = button.innerHTML;
-                button.innerHTML = '<i class="fa-solid fa-check"></i> הועתק';
-                setTimeout(() => button.innerHTML = original, 1600);
-            });
-        };
-
-        window.downloadCode = function(button) {
-            const text = button.closest('.code-card').querySelector('pre code').textContent;
-            const blob = new Blob([text], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `grok-site-${Date.now()}.html`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
-
-            const original = button.innerHTML;
-            button.innerHTML = '<i class="fa-solid fa-circle-check"></i> ירד בהצלחה';
-            setTimeout(() => button.innerHTML = original, 1600);
-        };
-
-        function exportChatHtml() {
-            const currentChat = getCurrentChat();
-            const rows = currentChat.messages.map(msg => `
-                <article style="margin:12px 0;padding:14px;border-radius:12px;border:1px solid #e2e8f0;background:${msg.role === 'user' ? '#dbeafe' : '#fff'}">
-                    <h4 style="margin:0 0 8px 0;font-family:Arial">${msg.role === 'user' ? 'משתמש' : 'עוזר'}</h4>
-                    <div style="white-space:pre-wrap;font-family:Arial">${escapeHtml(msg.content)}</div>
-                </article>
-            `).join('');
-
-            return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>${escapeHtml(currentChat.title)}</title></head><body style="font-family:Arial;background:#f8fafc;padding:20px"><h2>ייצוא צ'אט: ${escapeHtml(currentChat.title)}</h2>${rows}</body></html>`;
-        }
-
-        window.shareChat = async function() {
-            const currentChat = getCurrentChat();
-            if (!currentChat || !currentChat.messages.length) {
-                alert('אין תוכן לשיתוף כרגע.');
-                return;
-            }
-
-            const htmlContent = exportChatHtml();
-            const file = new File([htmlContent], `chat-export-${Date.now()}.html`, { type: 'text/html' });
-
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'שיתוף צ׳אט',
-                    text: 'מצורף קובץ HTML של הצ׳אט.',
-                    files: [file]
-                });
-                return;
-            }
-
-            const url = URL.createObjectURL(file);
-            const choice = prompt('כתוב: 1 לוואטסאפ, 2 למייל, או כל דבר אחר להורדה בלבד');
-            if (choice === '1') {
-                window.open(`https://wa.me/?text=${encodeURIComponent('מצורף סיכום צ׳אט. הורד/י את הקובץ מהדפדפן: ' + url)}`, '_blank');
-            } else if (choice === '2') {
-                window.location.href = `mailto:?subject=${encodeURIComponent('ייצוא צ׳אט HTML')}&body=${encodeURIComponent('מצורף לינק לקובץ הצ׳אט (זמני): ' + url)}`;
-            }
-
-            const dl = document.createElement('a');
-            dl.href = url;
-            dl.download = file.name;
-            dl.click();
-        };
-
         function setChatPending(chatId, isPending) {
-            const chat = chats.find(item => item.id === chatId);
-            if (!chat) return;
-            chat.pendingRequests = Math.max(0, chat.pendingRequests + (isPending ? 1 : -1));
-            chat.updatedAt = Date.now();
-            saveChats();
+            const current = pendingByChat.get(chatId) || 0;
+            const nextValue = Math.max(0, current + (isPending ? 1 : -1));
+            if (nextValue === 0) {
+                pendingByChat.delete(chatId);
+            } else {
+                pendingByChat.set(chatId, nextValue);
+            }
+            renderChatList();
         }
 
         async function sendMessage() {
             const userText = input.value.trim();
-            if (!userText) return;
+            if (!userText || !currentUser) return;
 
             const chatId = activeChatId;
-            addMessage('user', userText, chatId);
+            await addMessage('user', userText, chatId);
             input.value = '';
 
             const requestId = `typing-${++requestCounter}`;
@@ -634,14 +647,14 @@
                 document.getElementById(requestId)?.remove();
 
                 if (data.content) {
-                    addMessage('assistant', data.content, chatId);
+                    await addMessage('assistant', data.content, chatId);
                 } else {
-                    addMessage('assistant', 'שגיאה – בדוק שהשרת רץ.', chatId);
+                    await addMessage('assistant', 'שגיאה – בדוק שהשרת רץ.', chatId);
                 }
             } catch (err) {
                 console.error(err);
                 document.getElementById(requestId)?.remove();
-                addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת זמין.', chatId);
+                await addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת זמין.', chatId);
             } finally {
                 setChatPending(chatId, false);
                 if (chatId === activeChatId) {
@@ -650,14 +663,14 @@
             }
         }
 
-        function clearChat() {
+        async function clearChat() {
             const currentChat = getCurrentChat();
             if (!currentChat) return;
             if (confirm('לנקות את השיחה הנוכחית?')) {
                 currentChat.messages = [];
                 currentChat.title = 'שיחה חדשה';
                 currentChat.updatedAt = Date.now();
-                saveChats();
+                await saveChatDoc(currentChat);
                 renderWelcome();
             }
         }
@@ -666,8 +679,8 @@
             chatMessages.innerHTML = `
                 <div class="text-center text-slate-600 py-12">
                     <div class="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mb-4">✨</div>
-                    <h2 class="text-2xl font-semibold text-slate-900">ברוך הבא! נבנה אתר יפה ומוכן להורדה</h2>
-                    <p class="mt-2 max-w-2xl mx-auto">הצ׳אט עכשיו רחב יותר, שומר היסטוריה מלאה בלוקאל סטורג׳, מאפשר שיתוף כקובץ HTML, כולל תפריט המבורגר מקצועי עם הגדרות, יצירת קשר ומסלול פרימיום עתידי.</p>
+                    <h2 class="text-2xl font-semibold text-slate-900">ברוך הבא! כל הנתונים נשמרים בענן</h2>
+                    <p class="mt-2 max-w-2xl mx-auto">השיחות שלך נשמרות ב-Firebase Firestore תחת החשבון האישי שלך. אפשר להתחבר מכל מכשיר ולראות את ההיסטוריה.</p>
                 </div>
             `;
         }
@@ -684,29 +697,149 @@
             alert('מנוי פרימיום יושק בהמשך: שמירת ענן, תבניות מתקדמות וחיבורים נוספים.');
         }
 
-        function duplicateCurrentChat() {
+        async function duplicateCurrentChat() {
             const currentChat = getCurrentChat();
-            if (!currentChat) return;
+            if (!currentChat || !currentUser) return;
             const clone = {
                 ...currentChat,
                 id: crypto.randomUUID(),
                 title: `${currentChat.title} (עותק)`,
                 messages: [...currentChat.messages],
                 updatedAt: Date.now(),
-                pendingRequests: 0
+                createdAt: Date.now()
             };
-            chats.unshift(clone);
             activeChatId = clone.id;
-            saveChats();
-            renderMessages();
+            await saveChatDoc(clone);
         }
+
+        function exportChatHtml() {
+            const currentChat = getCurrentChat();
+            const rows = currentChat.messages.map(msg => `
+                <article style="margin:12px 0;padding:14px;border-radius:12px;border:1px solid #e2e8f0;background:${msg.role === 'user' ? '#dbeafe' : '#fff'}">
+                    <h4 style="margin:0 0 8px 0;font-family:Arial">${msg.role === 'user' ? 'משתמש' : 'עוזר'}</h4>
+                    <div style="white-space:pre-wrap;font-family:Arial">${escapeHtml(msg.content)}</div>
+                </article>
+            `).join('');
+
+            return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>${escapeHtml(currentChat.title)}</title></head><body style="font-family:Arial;background:#f8fafc;padding:20px"><h2>ייצוא צ'אט: ${escapeHtml(currentChat.title)}</h2>${rows}</body></html>`;
+        }
+
+        async function shareChat() {
+            const currentChat = getCurrentChat();
+            if (!currentChat || !currentChat.messages.length) {
+                alert('אין תוכן לשיתוף כרגע.');
+                return;
+            }
+
+            const htmlContent = exportChatHtml();
+            const file = new File([htmlContent], `chat-export-${Date.now()}.html`, { type: 'text/html' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: 'שיתוף צ׳אט',
+                    text: 'מצורף קובץ HTML של הצ׳אט.',
+                    files: [file]
+                });
+                return;
+            }
+
+            const url = URL.createObjectURL(file);
+            const choice = prompt('כתוב: 1 לוואטסאפ, 2 למייל, או כל דבר אחר להורדה בלבד');
+            if (choice === '1') {
+                window.open(`https://wa.me/?text=${encodeURIComponent('מצורף סיכום צ׳אט. הורד/י את הקובץ מהדפדפן: ' + url)}`, '_blank');
+            } else if (choice === '2') {
+                window.location.href = `mailto:?subject=${encodeURIComponent('ייצוא צ׳אט HTML')}&body=${encodeURIComponent('מצורף לינק לקובץ הצ׳אט (זמני): ' + url)}`;
+            }
+
+            const dl = document.createElement('a');
+            dl.href = url;
+            dl.download = file.name;
+            dl.click();
+        }
+
+        window.copyCode = function(button) {
+            const text = button.closest('.code-card').querySelector('pre code').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const original = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check"></i> הועתק';
+                setTimeout(() => button.innerHTML = original, 1600);
+            });
+        };
+
+        window.downloadCode = function(button) {
+            const text = button.closest('.code-card').querySelector('pre code').textContent;
+            const blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `grok-site-${Date.now()}.html`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+
+            const original = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-circle-check"></i> ירד בהצלחה';
+            setTimeout(() => button.innerHTML = original, 1600);
+        };
+
+        async function signInWithGoogle() {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error(error);
+                alert('התחברות נכשלה. ודא ש-Google Sign-In פעיל ב-Firebase Authentication.');
+            }
+        }
+
+        async function logout() {
+            await signOut(auth);
+        }
+
+        loginButton.addEventListener('click', signInWithGoogle);
+        logoutButton.addEventListener('click', logout);
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             sendMessage();
         });
 
-        window.onload = loadChats;
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            pendingByChat.clear();
+
+            if (!user) {
+                chats = [];
+                activeChatId = null;
+                chatList.innerHTML = '';
+                chatsCount.textContent = '0';
+                renderWelcome();
+                authBanner.classList.remove('hidden');
+                appShell.classList.add('hidden');
+                userChip.classList.add('hidden');
+                logoutButton.classList.add('hidden');
+                userEmail.textContent = '';
+                if (unsubscribeChats) unsubscribeChats();
+                return;
+            }
+
+            authBanner.classList.add('hidden');
+            appShell.classList.remove('hidden');
+            userChip.classList.remove('hidden');
+            logoutButton.classList.remove('hidden');
+            userEmail.textContent = user.email || 'משתמש מחובר';
+            subscribeToChats();
+        });
+
+        window.toggleMenu = toggleMenu;
+        window.switchChat = switchChat;
+        window.createNewChat = createNewChat;
+        window.clearChat = clearChat;
+        window.openSettings = openSettings;
+        window.openContact = openContact;
+        window.openPremium = openPremium;
+        window.duplicateCurrentChat = duplicateCurrentChat;
+        window.shareChat = shareChat;
     </script>
 </body>
 </html>
