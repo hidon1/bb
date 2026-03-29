@@ -1,281 +1,196 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>גלריה נעה</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(255,255,255,0.08), transparent 30%),
-        linear-gradient(135deg, #0f172a, #1e293b, #334155);
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-    }
-
-    .gallery-section {
-      width: 100%;
-      max-width: 1400px;
-    }
-
-    .gallery-title {
-      text-align: center;
-      font-size: 2.2rem;
-      margin-bottom: 14px;
-      font-weight: bold;
-    }
-
-    .gallery-subtitle {
-      text-align: center;
-      color: rgba(255,255,255,0.75);
-      margin-bottom: 32px;
-      font-size: 1rem;
-    }
-
-    .gallery-wrapper {
-      position: relative;
-      overflow: hidden;
-      border-radius: 28px;
-      padding: 22px 0;
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.28);
-    }
-
-    .gallery-wrapper::before,
-    .gallery-wrapper::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      width: 130px;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .gallery-wrapper::before {
-      right: 0;
-      background: linear-gradient(to left, rgba(15,23,42,1), rgba(15,23,42,0));
-    }
-
-    .gallery-wrapper::after {
-      left: 0;
-      background: linear-gradient(to right, rgba(15,23,42,1), rgba(15,23,42,0));
-    }
-
-    .gallery-track {
-      display: flex;
-      gap: 22px;
-      width: max-content;
-      animation: scrollGallery 28s linear infinite;
-      padding: 0 22px;
-    }
-
-    .gallery-wrapper:hover .gallery-track {
-      animation-play-state: paused;
-    }
-
-    .gallery-card {
-      flex: 0 0 auto;
-      width: 280px;
-      height: 360px;
-      border-radius: 24px;
-      overflow: hidden;
-      position: relative;
-      background: #111827;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.22);
-      transition: transform 0.35s ease, box-shadow 0.35s ease;
-    }
-
-    .gallery-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-    }
-
-    .gallery-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .gallery-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.68), rgba(0,0,0,0.08), transparent);
-      display: flex;
-      align-items: flex-end;
-      padding: 18px;
-    }
-
-    .gallery-text {
-      width: 100%;
-    }
-
-    .gallery-text h3 {
-      margin: 0 0 6px;
-      font-size: 1.15rem;
-    }
-
-    .gallery-text p {
-      margin: 0;
-      font-size: 0.92rem;
-      color: rgba(255,255,255,0.82);
-      line-height: 1.5;
-    }
-
-    @keyframes scrollGallery {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(50%);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .gallery-card {
-        width: 220px;
-        height: 300px;
-      }
-
-      .gallery-title {
-        font-size: 1.7rem;
-      }
-
-      .gallery-wrapper::before,
-      .gallery-wrapper::after {
-        width: 70px;
-      }
-
-      .gallery-track {
-        animation-duration: 20s;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok - בונה אתרים</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .chat-container { height: calc(100vh - 120px); }
+        .message-bubble { max-width: 80%; padding: 14px 20px; border-radius: 20px; }
+        .user-bubble { background: #10b981; color: white; border-bottom-right-radius: 4px; }
+        .assistant-bubble { background: #1f2937; color: #e5e7eb; border-bottom-left-radius: 4px; }
+        .code-block { background: #0f172a; border-radius: 8px; position: relative; }
+    </style>
 </head>
-<body>
-
-  <section class="gallery-section">
-    <div class="gallery-title">הגלריה שלנו</div>
-    <div class="gallery-subtitle">תצוגת תמונות נעה, חלקה ומודרנית</div>
-
-    <div class="gallery-wrapper">
-      <div class="gallery-track">
-        <!-- סט ראשון -->
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>עיצוב נקי</h3>
-              <p>מראה מודרני ונעים לעין</p>
+<body class="bg-gray-950 text-gray-200">
+    <div class="max-w-4xl mx-auto h-screen flex flex-col">
+        <!-- Header -->
+        <div class="bg-gray-900 border-b border-gray-800 p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500 rounded-2xl flex items-center justify-center text-white text-2xl">G</div>
+                <div>
+                    <h1 class="text-2xl font-semibold">בונה אתרים עם Grok</h1>
+                    <p class="text-gray-400 text-sm">צור ושפר אתרים בזמן אמת</p>
+                </div>
             </div>
-          </div>
+            <button onclick="clearChat()" class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm">
+                <i class="fa-solid fa-trash"></i>
+                <span>נקה שיחה</span>
+            </button>
         </div>
 
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>אווירה יוקרתית</h3>
-              <p>מעברים חלקים ועיצוב אלגנטי</p>
-            </div>
-          </div>
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="chat-container p-6 overflow-y-auto flex flex-col gap-6 bg-gray-950">
+            <!-- Messages inserted by JS -->
         </div>
 
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>סגנון מודרני</h3>
-              <p>תמונות רצות אחת ליד השנייה</p>
-            </div>
-          </div>
+        <!-- Input -->
+        <div class="p-4 border-t border-gray-800 bg-gray-900">
+            <form id="chat-form" class="flex gap-3">
+                <input id="user-input" 
+                       type="text" 
+                       class="flex-1 bg-gray-800 border border-gray-700 focus:border-green-500 rounded-3xl px-6 py-4 outline-none text-lg"
+                       placeholder="תאר לי אתר... (למשל: אתר תיק עבודות מודרני)">
+                <button type="submit"
+                        class="bg-green-500 hover:bg-green-600 w-14 h-14 rounded-3xl flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-paper-plane text-white text-xl"></i>
+                </button>
+            </form>
+            <p class="text-center text-gray-500 text-xs mt-3">Grok תמיד ישלח לך את **כל** הקוד המלא של האתר</p>
         </div>
-
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>תצוגה חכמה</h3>
-              <p>מתאים לאתרי תדמית וחנויות</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>חוויית משתמש</h3>
-              <p>אנימציה שקטה ונעימה</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- שכפול ליצירת תנועה אינסופית -->
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>עיצוב נקי</h3>
-              <p>מראה מודרני ונעים לעין</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>אווירה יוקרתית</h3>
-              <p>מעברים חלקים ועיצוב אלגנטי</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>סגנון מודרני</h3>
-              <p>תמונות רצות אחת ליד השנייה</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>תצוגה חכמה</h3>
-              <p>מתאים לאתרי תדמית וחנויות</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="gallery-card">
-          <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop" alt="">
-          <div class="gallery-overlay">
-            <div class="gallery-text">
-              <h3>חוויית משתמש</h3>
-              <p>אנימציה שקטה ונעימה</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </section>
 
+    <script>
+        let messages = []; // שומר את כל ההיסטוריה
+
+        const chatMessages = document.getElementById('chat-messages');
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('user-input');
+
+        function addMessage(role, content) {
+            messages.push({ role, content });
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            if (role === 'user') {
+                messageDiv.innerHTML = `<div class="message-bubble user-bubble">${content}</div>`;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-xl mt-1">G</div>
+                        <div class="assistant-bubble prose prose-invert max-w-none">
+                            ${formatMessage(content)}
+                        </div>
+                    </div>
+                `;
+            }
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatMessage(content) {
+            // תומך ב-```html ... ``` ומציג כבלוק עם כפתור העתקה
+            return content.replace(/```html\n([\s\S]*?)```/g, (match, code) => {
+                return `<div class="code-block p-4 mt-3 mb-3">
+                    <div class="flex justify-between text-xs text-gray-400 mb-2">
+                        <span>קוד HTML מלא (העתק והדבק)</span>
+                        <button onclick="copyCode(this)" class="flex items-center gap-1 hover:text-white">
+                            <i class="fa-solid fa-copy"></i> העתק
+                        </button>
+                    </div>
+                    <pre class="text-green-300 text-sm overflow-auto max-h-[500px]"><code>${escapeHtml(code)}</code></pre>
+                </div>`;
+            }).replace(/\n/g, '<br>');
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        window.copyCode = function(button) {
+            const codeBlock = button.parentElement.parentElement.querySelector('pre code');
+            const text = codeBlock.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const original = button.innerHTML;
+                button.innerHTML = `<i class="fa-solid fa-check"></i> הועתק!`;
+                setTimeout(() => button.innerHTML = original, 2000);
+            });
+        };
+
+        async function sendMessage() {
+            const userText = input.value.trim();
+            if (!userText) return;
+
+            addMessage('user', userText);
+            input.value = '';
+
+            // אינדיקטור "חושב..."
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing';
+            typingDiv.className = 'flex justify-start';
+            typingDiv.innerHTML = `
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-xl mt-1">G</div>
+                    <div class="bg-gray-800 rounded-3xl px-5 py-3 flex items-center gap-2">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-gray-400 animate-bounce"></div>
+                            <div class="w-2 h-2 bg-gray-400 animate-bounce" style="animation-delay: 150ms"></div>
+                            <div class="w-2 h-2 bg-gray-400 animate-bounce" style="animation-delay: 300ms"></div>
+                        </div>
+                        <span class="text-gray-400 text-sm">Grok חושב...</span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: messages })
+                });
+
+                const data = await res.json();
+                document.getElementById('typing').remove();
+
+                if (data.content) {
+                    addMessage('assistant', data.content);
+                } else {
+                    addMessage('assistant', 'שגיאה – בדוק שהשרת רץ');
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('typing').remove();
+                addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת רץ על פורט 3000');
+            }
+        }
+
+        function clearChat() {
+            if (confirm('לנקות את השיחה?')) {
+                messages = [];
+                chatMessages.innerHTML = `
+                    <div class="text-center text-gray-400 py-12">
+                        <div class="mx-auto w-16 h-16 bg-gray-800 rounded-3xl flex items-center justify-center text-4xl mb-4">👋</div>
+                        <h2 class="text-2xl font-medium">שלום! מה נבנה היום?</h2>
+                        <p class="mt-2 max-w-xs mx-auto">תאר לי אתר ואני אייצר לך קוד HTML מלא. אחר כך נוכל לשפר אותו יחד.</p>
+                    </div>
+                `;
+            }
+        }
+
+        form.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(); });
+
+        // הודעת פתיחה
+        window.onload = () => {
+            chatMessages.innerHTML = `
+                <div class="text-center text-gray-400 py-12">
+                    <div class="mx-auto w-16 h-16 bg-gray-800 rounded-3xl flex items-center justify-center text-4xl mb-4">👋</div>
+                    <h2 class="text-2xl font-medium">שלום! אני Grok – בונה האתרים שלך</h2>
+                    <p class="mt-2 max-w-xs mx-auto">תאר לי אתר (למשל: "דף נחיתה לחברת סטארט-אפ") ואני אשלח לך **קוד HTML מלא** מיד.<br>אפשר לשפר אותו כל הזמן בשיחה.</p>
+                </div>
+            `;
+        };
+    </script>
 </body>
-</html> 
+</html>
