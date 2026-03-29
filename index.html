@@ -170,6 +170,74 @@
             background: #eef2ff;
         }
 
+        .chat-item.loading {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .status-pill {
+            font-size: 10px;
+            border-radius: 999px;
+            padding: 2px 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-inline-start: 6px;
+        }
+
+        .status-pill.waiting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .ghost-btn {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #334155;
+            border-radius: 999px;
+            padding: 9px 14px;
+            font-size: 13px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        .ghost-btn:hover {
+            transform: translateY(-1px);
+            border-color: #c7d2fe;
+            color: #312e81;
+            background: #eef2ff;
+        }
+
+        .typing-min {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .typing-min span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #f59e0b;
+            animation: pulseDots 1.2s infinite;
+        }
+
+        .typing-min span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-min span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulseDots {
+            0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+            40% { opacity: 1; transform: translateY(-2px); }
+        }
+
         @media (max-width: 1024px) {
             .app-shell {
                 flex-direction: column;
@@ -211,10 +279,13 @@
                     <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white text-2xl">G</div>
                     <div>
                         <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם Grok</h1>
-                        <p class="text-slate-500 text-sm">ממשק מקצועי, שיחות שמורות, ושיתוף מלא</p>
+                        <p class="text-slate-500 text-sm">שיחות ממשיכות לרוץ ברקע גם כשעוברים לצ׳אט אחר</p>
                     </div>
                 </div>
-                <div class="relative">
+                <div class="relative header-actions">
+                    <button onclick="duplicateCurrentChat()" class="ghost-btn">
+                        <i class="fa-regular fa-clone ml-1"></i> שכפל שיחה
+                    </button>
                     <button onclick="toggleMenu()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-full text-sm text-slate-700">
                         <i class="fa-solid fa-bars"></i>
                         <span>תפריט</span>
@@ -263,6 +334,7 @@
 
         let chats = [];
         let activeChatId = null;
+        let requestCounter = 0;
 
         const chatMessages = document.getElementById('chat-messages');
         const form = document.getElementById('chat-form');
@@ -296,10 +368,16 @@
                     id: crypto.randomUUID(),
                     title: 'שיחה חדשה',
                     updatedAt: Date.now(),
-                    messages: []
+                    messages: [],
+                    pendingRequests: 0
                 };
                 chats.push(starter);
             }
+
+            chats = chats.map(chat => ({
+                pendingRequests: 0,
+                ...chat
+            }));
 
             activeChatId = chats[0].id;
             renderChatList();
@@ -313,9 +391,13 @@
             chatList.innerHTML = chats.map(chat => {
                 const isActive = chat.id === activeChatId;
                 const subtitle = chat.messages[0]?.content?.slice(0, 26) || 'אין הודעות עדיין';
-                return `<div class="chat-item ${isActive ? 'active' : ''}" onclick="switchChat('${chat.id}')">
-                    <div class="font-medium text-sm text-slate-800">${escapeHtml(chat.title)}</div>
+                return `<div class="chat-item ${isActive ? 'active' : ''} ${chat.pendingRequests ? 'loading' : ''}" onclick="switchChat('${chat.id}')">
+                    <div class="font-medium text-sm text-slate-800">
+                        ${escapeHtml(chat.title)}
+                        ${chat.pendingRequests ? '<span class="status-pill waiting"><i class="fa-solid fa-rotate fa-spin"></i> חושב</span>' : ''}
+                    </div>
                     <div class="text-xs text-slate-500 mt-1">${escapeHtml(subtitle)}</div>
+                    ${chat.pendingRequests ? '<div class="typing-min"><span></span><span></span><span></span></div>' : ''}
                 </div>`;
             }).join('');
         }
@@ -331,7 +413,8 @@
                 id: crypto.randomUUID(),
                 title: `שיחה חדשה ${chats.length + 1}`,
                 updatedAt: Date.now(),
-                messages: []
+                messages: [],
+                pendingRequests: 0
             };
             chats.unshift(chat);
             activeChatId = chat.id;
@@ -339,16 +422,19 @@
             renderMessages();
         }
 
-        function addMessage(role, content) {
-            const currentChat = getCurrentChat();
+        function addMessage(role, content, chatId = activeChatId) {
+            const currentChat = chats.find(chat => chat.id === chatId);
+            if (!currentChat) return;
             currentChat.messages.push({ role, content });
             if (currentChat.messages.length === 1 && role === 'user') {
                 currentChat.title = content.slice(0, 34);
             }
             currentChat.updatedAt = Date.now();
             saveChats();
-            renderMessages();
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (chatId === activeChatId) {
+                renderMessages();
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
         }
 
         function renderMessages() {
@@ -498,15 +584,25 @@
             dl.click();
         };
 
+        function setChatPending(chatId, isPending) {
+            const chat = chats.find(item => item.id === chatId);
+            if (!chat) return;
+            chat.pendingRequests = Math.max(0, chat.pendingRequests + (isPending ? 1 : -1));
+            chat.updatedAt = Date.now();
+            saveChats();
+        }
+
         async function sendMessage() {
             const userText = input.value.trim();
             if (!userText) return;
 
-            addMessage('user', userText);
+            const chatId = activeChatId;
+            addMessage('user', userText, chatId);
             input.value = '';
 
+            const requestId = `typing-${++requestCounter}`;
             const typingDiv = document.createElement('div');
-            typingDiv.id = 'typing';
+            typingDiv.id = requestId;
             typingDiv.className = 'flex justify-start';
             typingDiv.innerHTML = `
                 <div class="flex gap-3 items-start">
@@ -523,27 +619,34 @@
             `;
             chatMessages.appendChild(typingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            setChatPending(chatId, true);
 
             try {
-                const currentChat = getCurrentChat();
+                const sourceChat = chats.find(chat => chat.id === chatId);
+                const payloadMessages = [...(sourceChat?.messages || [])];
                 const res = await fetch('https://noisy-dust-c360.zm0548407450.workers.dev/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: currentChat.messages })
+                    body: JSON.stringify({ messages: payloadMessages })
                 });
 
                 const data = await res.json();
-                document.getElementById('typing')?.remove();
+                document.getElementById(requestId)?.remove();
 
                 if (data.content) {
-                    addMessage('assistant', data.content);
+                    addMessage('assistant', data.content, chatId);
                 } else {
-                    addMessage('assistant', 'שגיאה – בדוק שהשרת רץ.');
+                    addMessage('assistant', 'שגיאה – בדוק שהשרת רץ.', chatId);
                 }
             } catch (err) {
                 console.error(err);
-                document.getElementById('typing')?.remove();
-                addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת זמין.');
+                document.getElementById(requestId)?.remove();
+                addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת זמין.', chatId);
+            } finally {
+                setChatPending(chatId, false);
+                if (chatId === activeChatId) {
+                    renderMessages();
+                }
             }
         }
 
@@ -579,6 +682,23 @@
 
         function openPremium() {
             alert('מנוי פרימיום יושק בהמשך: שמירת ענן, תבניות מתקדמות וחיבורים נוספים.');
+        }
+
+        function duplicateCurrentChat() {
+            const currentChat = getCurrentChat();
+            if (!currentChat) return;
+            const clone = {
+                ...currentChat,
+                id: crypto.randomUUID(),
+                title: `${currentChat.title} (עותק)`,
+                messages: [...currentChat.messages],
+                updatedAt: Date.now(),
+                pendingRequests: 0
+            };
+            chats.unshift(clone);
+            activeChatId = clone.id;
+            saveChats();
+            renderMessages();
         }
 
         form.addEventListener('submit', (e) => {
