@@ -264,12 +264,25 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="text-2xl font-semibold text-slate-900">התחברות לחשבון</h2>
-                <p class="text-slate-600 mt-1">כדי לשמור את כל השיחות שלך ב-Firebase Firestore, צריך להתחבר עם Google.</p>
+                <p class="text-slate-600 mt-1">כדי לשמור את כל השיחות שלך ב-Firebase Firestore, אפשר להתחבר עם Google או עם מייל וסיסמה.</p>
             </div>
-            <button id="google-login-btn" class="bg-white border border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 text-slate-800 rounded-full px-5 py-3 inline-flex items-center gap-2 self-start sm:self-auto">
-                <i class="fa-brands fa-google text-red-500"></i>
-                התחבר עם Google
-            </button>
+            <div class="w-full sm:w-auto sm:min-w-[360px] flex flex-col gap-3">
+                <input id="email-input" type="email" autocomplete="email" placeholder="האימייל שלך" class="bg-white border border-slate-300 focus:border-indigo-500 rounded-xl px-4 py-3 outline-none text-sm text-slate-900">
+                <input id="password-input" type="password" autocomplete="current-password" placeholder="סיסמה (לפחות 6 תווים)" class="bg-white border border-slate-300 focus:border-indigo-500 rounded-xl px-4 py-3 outline-none text-sm text-slate-900">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button id="email-login-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-full px-4 py-3 text-sm font-medium">
+                        התחברות עם מייל
+                    </button>
+                    <button id="email-signup-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full px-4 py-3 text-sm font-medium">
+                        הרשמה עם מייל
+                    </button>
+                </div>
+                <button id="google-login-btn" class="bg-white border border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 text-slate-800 rounded-full px-5 py-3 inline-flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-google text-red-500"></i>
+                    התחבר עם Google
+                </button>
+                <p id="auth-status" class="text-xs text-slate-500 min-h-[1.25rem]"></p>
+            </div>
         </div>
     </div>
 
@@ -356,6 +369,8 @@
             getAuth,
             GoogleAuthProvider,
             signInWithPopup,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
             onAuthStateChanged,
             signOut
         } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
@@ -395,6 +410,11 @@
         const authBanner = document.getElementById('auth-banner');
         const appShell = document.getElementById('app-shell');
         const loginButton = document.getElementById('google-login-btn');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const emailLoginButton = document.getElementById('email-login-btn');
+        const emailSignupButton = document.getElementById('email-signup-btn');
+        const authStatus = document.getElementById('auth-status');
         const logoutButton = document.getElementById('logout-btn');
         const userChip = document.getElementById('user-chip');
         const userEmail = document.getElementById('user-email');
@@ -785,10 +805,63 @@
 
         async function signInWithGoogle() {
             try {
+                setAuthLoading(true);
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error(error);
                 alert('התחברות נכשלה. ודא ש-Google Sign-In פעיל ב-Firebase Authentication.');
+            } finally {
+                setAuthLoading(false);
+            }
+        }
+
+        function getEmailPasswordValues() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) {
+                authStatus.textContent = 'נא למלא גם אימייל וגם סיסמה.';
+                return null;
+            }
+            return { email, password };
+        }
+
+        function setAuthLoading(isLoading) {
+            [loginButton, emailLoginButton, emailSignupButton].forEach((button) => {
+                button.disabled = isLoading;
+                button.classList.toggle('opacity-60', isLoading);
+                button.classList.toggle('cursor-not-allowed', isLoading);
+            });
+        }
+
+        async function signInWithEmailPassword() {
+            const credentials = getEmailPasswordValues();
+            if (!credentials) return;
+            authStatus.textContent = 'מתחבר...';
+            try {
+                setAuthLoading(true);
+                await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+                authStatus.textContent = '';
+            } catch (error) {
+                console.error(error);
+                authStatus.textContent = 'התחברות נכשלה. בדוק אימייל/סיסמה ונסה שוב.';
+            } finally {
+                setAuthLoading(false);
+            }
+        }
+
+        async function signUpWithEmailPassword() {
+            const credentials = getEmailPasswordValues();
+            if (!credentials) return;
+            authStatus.textContent = 'נרשם...';
+            try {
+                setAuthLoading(true);
+                await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+                authStatus.textContent = '';
+            } catch (error) {
+                console.error(error);
+                authStatus.textContent = 'ההרשמה נכשלה. ודא שהסיסמה כוללת לפחות 6 תווים.';
+            } finally {
+                setAuthLoading(false);
             }
         }
 
@@ -797,6 +870,16 @@
         }
 
         loginButton.addEventListener('click', signInWithGoogle);
+        emailLoginButton.addEventListener('click', signInWithEmailPassword);
+        emailSignupButton.addEventListener('click', signUpWithEmailPassword);
+        [emailInput, passwordInput].forEach((field) => {
+            field.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    signInWithEmailPassword();
+                }
+            });
+        });
         logoutButton.addEventListener('click', logout);
 
         form.addEventListener('submit', (e) => {
