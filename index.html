@@ -7,73 +7,185 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .chat-container { height: calc(100vh - 120px); }
-        .message-bubble { max-width: 80%; padding: 14px 20px; border-radius: 20px; }
-        .user-bubble { background: #10b981; color: white; border-bottom-right-radius: 4px; }
-        .assistant-bubble { background: #1f2937; color: #e5e7eb; border-bottom-left-radius: 4px; }
-        .code-block { background: #0f172a; border-radius: 8px; position: relative; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            color-scheme: light;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: #111827;
+        }
+
+        .chat-container {
+            height: calc(100vh - 146px);
+        }
+
+        .message-bubble {
+            max-width: 82%;
+            padding: 14px 20px;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+        }
+
+        .user-bubble {
+            background: linear-gradient(120deg, #2563eb, #4f46e5);
+            color: #ffffff;
+            border-bottom-right-radius: 6px;
+            border: none;
+        }
+
+        .assistant-bubble {
+            background: #ffffff;
+            color: #111827;
+            border-bottom-left-radius: 6px;
+        }
+
+        .code-card {
+            background: #f8fafc;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 14px 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #eff6ff;
+            border-bottom: 1px solid #dbeafe;
+            font-size: 12px;
+            color: #1e3a8a;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            border: 1px solid #c7d2fe;
+            background: #ffffff;
+            color: #3730a3;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #eef2ff;
+        }
+
+        pre {
+            margin: 0;
+            padding: 14px;
+            color: #111827;
+            font-size: 13px;
+            max-height: 500px;
+            overflow: auto;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .drawer {
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .drawer.hidden-panel {
+            transform: translateY(-8px);
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-200">
-    <div class="max-w-4xl mx-auto h-screen flex flex-col">
+<body>
+    <div class="max-w-5xl mx-auto h-screen flex flex-col px-3 sm:px-4">
         <!-- Header -->
-        <div class="bg-gray-900 border-b border-gray-800 p-4 flex items-center justify-between">
+        <header class="mt-4 bg-white/90 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-green-500 rounded-2xl flex items-center justify-center text-white text-2xl">G</div>
+                <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white text-2xl">G</div>
                 <div>
-                    <h1 class="text-2xl font-semibold">בונה אתרים עם Grok</h1>
-                    <p class="text-gray-400 text-sm">צור ושפר אתרים בזמן אמת</p>
+                    <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם Grok</h1>
+                    <p class="text-slate-500 text-sm">עיצוב נקי, קוד מלא, והורדה מיידית</p>
                 </div>
             </div>
-            <button onclick="clearChat()" class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm">
-                <i class="fa-solid fa-trash"></i>
-                <span>נקה שיחה</span>
-            </button>
-        </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMenu()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-full text-sm text-slate-700">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>תפריט</span>
+                </button>
+                <button onclick="clearChat()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-full text-sm text-slate-700">
+                    <i class="fa-solid fa-trash"></i>
+                    <span>נקה</span>
+                </button>
+            </div>
+        </header>
+
+        <section id="top-menu" class="drawer hidden-panel mt-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <h2 class="font-semibold text-slate-900 mb-2">הגדרות והוראות</h2>
+            <ul class="text-sm text-slate-700 space-y-2 list-disc pr-5">
+                <li>כתוב מה אתה רוצה לבנות, למשל: "דף נחיתה לעסק".</li>
+                <li>כאשר מתקבל קוד HTML, אפשר להשתמש בכפתור <strong>העתק</strong> או <strong>הורד</strong>.</li>
+                <li>כל בלוק קוד מוצג בכרטיס מעוצב עם פינות עגולות לנוחות קריאה.</li>
+            </ul>
+        </section>
 
         <!-- Chat Messages -->
-        <div id="chat-messages" class="chat-container p-6 overflow-y-auto flex flex-col gap-6 bg-gray-950">
+        <main id="chat-messages" class="chat-container p-4 sm:p-6 overflow-y-auto flex flex-col gap-5 mt-3 bg-white border border-slate-200 rounded-2xl shadow-sm">
             <!-- Messages inserted by JS -->
-        </div>
+        </main>
 
         <!-- Input -->
-        <div class="p-4 border-t border-gray-800 bg-gray-900">
-            <form id="chat-form" class="flex gap-3">
+        <div class="my-3 p-3 sm:p-4 border border-slate-200 bg-white rounded-2xl shadow-sm">
+            <form id="chat-form" class="flex gap-3 items-center">
                 <input id="user-input" 
                        type="text" 
-                       class="flex-1 bg-gray-800 border border-gray-700 focus:border-green-500 rounded-3xl px-6 py-4 outline-none text-lg"
-                       placeholder="תאר לי אתר... (למשל: אתר תיק עבודות מודרני)">
+                       class="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-full px-6 py-4 outline-none text-base text-slate-900"
+                       placeholder="תאר את האתר שתרצה לבנות או לשפר...">
                 <button type="submit"
-                        class="bg-green-500 hover:bg-green-600 w-14 h-14 rounded-3xl flex items-center justify-center transition-colors">
+                        class="bg-indigo-500 hover:bg-indigo-600 w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-md shadow-indigo-200">
                     <i class="fa-solid fa-paper-plane text-white text-xl"></i>
                 </button>
             </form>
-            <p class="text-center text-gray-500 text-xs mt-3">Grok תמיד ישלח לך את **כל** הקוד המלא של האתר</p>
         </div>
     </div>
 
     <script>
-        let messages = []; // שומר את כל ההיסטוריה
+        let messages = [];
 
         const chatMessages = document.getElementById('chat-messages');
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
+        const topMenu = document.getElementById('top-menu');
+
+        function toggleMenu() {
+            topMenu.classList.toggle('hidden-panel');
+        }
 
         function addMessage(role, content) {
             messages.push({ role, content });
-            
+
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            
+
             if (role === 'user') {
                 messageDiv.innerHTML = `<div class="message-bubble user-bubble">${content}</div>`;
             } else {
                 messageDiv.innerHTML = `
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-xl mt-1">G</div>
-                        <div class="assistant-bubble prose prose-invert max-w-none">
+                    <div class="flex gap-3 items-start max-w-full">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-sm mt-1">G</div>
+                        <div class="assistant-bubble message-bubble max-w-none">
                             ${formatMessage(content)}
                         </div>
                     </div>
@@ -84,37 +196,58 @@
         }
 
         function formatMessage(content) {
-            // תומך ב-```html ... ``` ומציג כבלוק עם כפתור העתקה
             return content.replace(/```html\n([\s\S]*?)```/g, (match, code) => {
-                return `<div class="code-block p-4 mt-3 mb-3">
-                    <div class="flex justify-between text-xs text-gray-400 mb-2">
-                        <span>קוד HTML מלא (העתק והדבק)</span>
-                        <button onclick="copyCode(this)" class="flex items-center gap-1 hover:text-white">
-                            <i class="fa-solid fa-copy"></i> העתק
-                        </button>
+                const escaped = escapeHtml(code.trim());
+                return `<div class="code-card">
+                    <div class="code-header">
+                        <span>קובץ HTML מוכן לשימוש</span>
+                        <div class="code-actions">
+                            <button onclick="copyCode(this)" class="action-btn">
+                                <i class="fa-solid fa-copy"></i> העתק
+                            </button>
+                            <button onclick="downloadCode(this)" class="action-btn">
+                                <i class="fa-solid fa-download"></i> הורד
+                            </button>
+                        </div>
                     </div>
-                    <pre class="text-green-300 text-sm overflow-auto max-h-[500px]"><code>${escapeHtml(code)}</code></pre>
+                    <pre><code>${escaped}</code></pre>
                 </div>`;
             }).replace(/\n/g, '<br>');
         }
 
         function escapeHtml(unsafe) {
             return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         window.copyCode = function(button) {
-            const codeBlock = button.parentElement.parentElement.querySelector('pre code');
-            const text = codeBlock.textContent;
+            const text = button.closest('.code-card').querySelector('pre code').textContent;
             navigator.clipboard.writeText(text).then(() => {
                 const original = button.innerHTML;
-                button.innerHTML = `<i class="fa-solid fa-check"></i> הועתק!`;
-                setTimeout(() => button.innerHTML = original, 2000);
+                button.innerHTML = '<i class="fa-solid fa-check"></i> הועתק';
+                setTimeout(() => button.innerHTML = original, 1600);
             });
+        };
+
+        window.downloadCode = function(button) {
+            const text = button.closest('.code-card').querySelector('pre code').textContent;
+            const blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `grok-site-${Date.now()}.html`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+
+            const original = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-circle-check"></i> ירד בהצלחה';
+            setTimeout(() => button.innerHTML = original, 1600);
         };
 
         async function sendMessage() {
@@ -124,20 +257,19 @@
             addMessage('user', userText);
             input.value = '';
 
-            // אינדיקטור "חושב..."
             const typingDiv = document.createElement('div');
             typingDiv.id = 'typing';
             typingDiv.className = 'flex justify-start';
             typingDiv.innerHTML = `
-                <div class="flex gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-xl mt-1">G</div>
-                    <div class="bg-gray-800 rounded-3xl px-5 py-3 flex items-center gap-2">
+                <div class="flex gap-3 items-start">
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-white text-sm mt-1">G</div>
+                    <div class="bg-slate-100 border border-slate-200 rounded-2xl px-5 py-3 flex items-center gap-2">
                         <div class="flex space-x-1">
-                            <div class="w-2 h-2 bg-gray-400 animate-bounce"></div>
-                            <div class="w-2 h-2 bg-gray-400 animate-bounce" style="animation-delay: 150ms"></div>
-                            <div class="w-2 h-2 bg-gray-400 animate-bounce" style="animation-delay: 300ms"></div>
+                            <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                            <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                         </div>
-                        <span class="text-gray-400 text-sm">Grok חושב...</span>
+                        <span class="text-slate-500 text-sm">Grok חושב...</span>
                     </div>
                 </div>
             `;
@@ -148,49 +280,47 @@
                 const res = await fetch('https://noisy-dust-c360.zm0548407450.workers.dev/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: messages })
+                    body: JSON.stringify({ messages })
                 });
 
                 const data = await res.json();
-                document.getElementById('typing').remove();
+                document.getElementById('typing')?.remove();
 
                 if (data.content) {
                     addMessage('assistant', data.content);
                 } else {
-                    addMessage('assistant', 'שגיאה – בדוק שהשרת רץ');
+                    addMessage('assistant', 'שגיאה – בדוק שהשרת רץ.');
                 }
             } catch (err) {
                 console.error(err);
-                document.getElementById('typing').remove();
-                addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת רץ על פורט 3000');
+                document.getElementById('typing')?.remove();
+                addMessage('assistant', 'שגיאה בחיבור לשרת. ודא שהשרת זמין.');
             }
         }
 
         function clearChat() {
             if (confirm('לנקות את השיחה?')) {
                 messages = [];
-                chatMessages.innerHTML = `
-                    <div class="text-center text-gray-400 py-12">
-                        <div class="mx-auto w-16 h-16 bg-gray-800 rounded-3xl flex items-center justify-center text-4xl mb-4">👋</div>
-                        <h2 class="text-2xl font-medium">שלום! מה נבנה היום?</h2>
-                        <p class="mt-2 max-w-xs mx-auto">תאר לי אתר ואני אייצר לך קוד HTML מלא. אחר כך נוכל לשפר אותו יחד.</p>
-                    </div>
-                `;
+                renderWelcome();
             }
         }
 
-        form.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(); });
-
-        // הודעת פתיחה
-        window.onload = () => {
+        function renderWelcome() {
             chatMessages.innerHTML = `
-                <div class="text-center text-gray-400 py-12">
-                    <div class="mx-auto w-16 h-16 bg-gray-800 rounded-3xl flex items-center justify-center text-4xl mb-4">👋</div>
-                    <h2 class="text-2xl font-medium">שלום! אני Grok – בונה האתרים שלך</h2>
-                    <p class="mt-2 max-w-xs mx-auto">תאר לי אתר (למשל: "דף נחיתה לחברת סטארט-אפ") ואני אשלח לך **קוד HTML מלא** מיד.<br>אפשר לשפר אותו כל הזמן בשיחה.</p>
+                <div class="text-center text-slate-600 py-12">
+                    <div class="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mb-4">✨</div>
+                    <h2 class="text-2xl font-semibold text-slate-900">ברוך הבא! נבנה אתר יפה ומוכן להורדה</h2>
+                    <p class="mt-2 max-w-lg mx-auto">כתוב את סוג האתר שתרצה. אשלח לך קוד HTML מלא, ובכל קטע תקבל כפתור להעתקה ולהורדה בקובץ נפרד.</p>
                 </div>
             `;
-        };
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        window.onload = renderWelcome;
     </script>
 </body>
 </html>
