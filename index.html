@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok - בונה אתרים</title>
+    <title>בונה אתרים עם יזם אתרים</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -47,6 +47,25 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: conic-gradient(from 120deg, #2563eb, #7c3aed, #ec4899, #14b8a6, #2563eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+            animation: logoSpin 8s linear infinite;
+        }
+
+        @keyframes logoSpin {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
         }
 
         .chat-workspace {
@@ -162,6 +181,7 @@
             padding: 10px 12px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
         }
 
         .chat-item:hover,
@@ -173,6 +193,73 @@
         .chat-item.loading {
             border-color: #f59e0b;
             background: #fffbeb;
+        }
+
+        .chat-actions-btn {
+            border: none;
+            background: transparent;
+            color: #64748b;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+        }
+
+        .chat-actions-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .chat-item-menu {
+            position: absolute;
+            top: 38px;
+            left: 10px;
+            z-index: 30;
+            border: 1px solid #dbeafe;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+            min-width: 152px;
+            overflow: hidden;
+        }
+
+        .chat-item-menu button {
+            width: 100%;
+            text-align: right;
+            padding: 10px 12px;
+            font-size: 12px;
+            border: none;
+            background: #fff;
+            color: #334155;
+        }
+
+        .chat-item-menu button:hover {
+            background: #f8fafc;
+        }
+
+        .chat-item-menu .danger {
+            color: #b91c1c;
+            background: #fef2f2;
+        }
+
+        .upload-badge {
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-radius: 999px;
+            font-size: 11px;
+            padding: 5px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 4px 4px 0 0;
+        }
+
+        .html-banner {
+            margin-top: auto;
+            border: 1px dashed #a5b4fc;
+            border-radius: 14px;
+            background: linear-gradient(120deg, #eef2ff, #f8fafc);
+            padding: 10px;
         }
 
         .status-pill {
@@ -297,14 +384,21 @@
                 <span id="chats-count" class="text-xs bg-indigo-100 text-indigo-700 rounded-full px-2 py-1">0</span>
             </div>
             <div id="chat-list" class="mt-3 space-y-2 overflow-y-auto pr-1"></div>
+            <div class="html-banner">
+                <button onclick="openHtmlFilesPanel()" class="w-full text-right text-sm text-indigo-700 font-medium">
+                    <i class="fa-solid fa-folder-open ml-1"></i>
+                    קבצי HTML שלך
+                </button>
+                <p class="text-xs text-slate-500 mt-1">לחיצה תפתח תיקייה וירטואלית עם קבצי HTML מהשיחות.</p>
+            </div>
         </aside>
 
         <div class="chat-workspace">
             <header class="bg-white/90 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white text-2xl">G</div>
+                    <div class="brand-logo">י</div>
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם Grok</h1>
+                        <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם יזם אתרים</h1>
                         <p class="text-slate-500 text-sm">שיחות ממשיכות לרוץ ברקע גם כשעוברים לצ׳אט אחר</p>
                     </div>
                 </div>
@@ -347,6 +441,10 @@
 
             <div class="my-3 p-3 sm:p-4 border border-slate-200 bg-white rounded-2xl shadow-sm">
                 <form id="chat-form" class="flex gap-3 items-center">
+                    <input id="file-input" type="file" accept="image/*,.html,text/html" multiple class="hidden">
+                    <button type="button" onclick="triggerFileUpload()" class="ghost-btn !px-4 !py-3" title="העלאת קובץ">
+                        <i class="fa-solid fa-paperclip ml-1"></i> קובץ
+                    </button>
                     <input id="user-input"
                            type="text"
                            class="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-full px-6 py-4 outline-none text-base text-slate-900"
@@ -358,7 +456,18 @@
                         <i class="fa-solid fa-paper-plane text-white text-xl"></i>
                     </button>
                 </form>
+                <div id="upload-preview" class="mt-2"></div>
             </div>
+        </div>
+    </div>
+
+    <div id="html-files-modal" class="hidden fixed inset-0 bg-slate-900/40 z-40 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-4 w-full max-w-2xl border border-slate-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">תיקיית קבצי HTML</h3>
+                <button onclick="closeHtmlFilesPanel()" class="ghost-btn">סגור</button>
+            </div>
+            <div id="html-files-list" class="mt-3 max-h-[60vh] overflow-auto space-y-2"></div>
         </div>
     </div>
 
@@ -378,11 +487,18 @@
             getFirestore,
             collection,
             doc,
+            deleteDoc,
             onSnapshot,
             orderBy,
             query,
             setDoc
         } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+        import {
+            getStorage,
+            ref,
+            uploadBytes,
+            getDownloadURL
+        } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDmkioVK9XKo2LJhN8EysPULxIpX81URR4",
@@ -398,6 +514,7 @@
         getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
         const provider = new GoogleAuthProvider();
 
         let chats = [];
@@ -405,6 +522,8 @@
         let requestCounter = 0;
         let currentUser = null;
         let unsubscribeChats = null;
+        let openMenuChatId = null;
+        let pendingUploads = [];
         const pendingByChat = new Map();
 
         const authBanner = document.getElementById('auth-banner');
@@ -424,6 +543,10 @@
         const topMenu = document.getElementById('top-menu');
         const chatList = document.getElementById('chat-list');
         const chatsCount = document.getElementById('chats-count');
+        const fileInput = document.getElementById('file-input');
+        const uploadPreview = document.getElementById('upload-preview');
+        const htmlFilesModal = document.getElementById('html-files-modal');
+        const htmlFilesList = document.getElementById('html-files-list');
 
         function toggleMenu() {
             topMenu.classList.toggle('hidden-panel');
@@ -491,21 +614,46 @@
                 const subtitle = chat.messages[0]?.content?.slice(0, 26) || 'אין הודעות עדיין';
                 const pendingRequests = pendingByChat.get(chat.id) || 0;
 
+                const menu = openMenuChatId === chat.id ? `<div class="chat-item-menu" onclick="event.stopPropagation()">
+                    <button onclick="shareSpecificChat('${chat.id}')"><i class="fa-solid fa-share-nodes ml-1"></i> שתף ב-Gmail</button>
+                    <button class="danger" onclick="deleteChatById('${chat.id}')"><i class="fa-solid fa-trash ml-1"></i> מחק שיחה</button>
+                </div>` : '';
                 return `<div class="chat-item ${isActive ? 'active' : ''} ${pendingRequests ? 'loading' : ''}" onclick="switchChat('${chat.id}')">
-                    <div class="font-medium text-sm text-slate-800">
-                        ${escapeHtml(chat.title)}
-                        ${pendingRequests ? '<span class="status-pill waiting"><i class="fa-solid fa-rotate fa-spin"></i> חושב</span>' : ''}
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="font-medium text-sm text-slate-800">
+                            ${escapeHtml(chat.title)}
+                            ${pendingRequests ? '<span class="status-pill waiting"><i class="fa-solid fa-rotate fa-spin"></i> יזם חושב</span>' : ''}
+                        </div>
+                        <button class="chat-actions-btn" onclick="toggleChatMenu(event, '${chat.id}')"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
                     <div class="text-xs text-slate-500 mt-1">${escapeHtml(subtitle)}</div>
                     ${pendingRequests ? '<div class="typing-min"><span></span><span></span><span></span></div>' : ''}
+                    ${menu}
                 </div>`;
             }).join('');
         }
 
         function switchChat(chatId) {
             activeChatId = chatId;
+            openMenuChatId = null;
             renderChatList();
             renderMessages();
+        }
+
+        function toggleChatMenu(event, chatId) {
+            event.stopPropagation();
+            openMenuChatId = openMenuChatId === chatId ? null : chatId;
+            renderChatList();
+        }
+
+        async function deleteChatById(chatId) {
+            if (!currentUser) return;
+            if (!confirm('למחוק את השיחה הזו?')) return;
+            await deleteDoc(doc(db, 'users', currentUser.uid, 'chats', chatId));
+            openMenuChatId = null;
+            if (activeChatId === chatId) {
+                activeChatId = chats.find(chat => chat.id !== chatId)?.id || null;
+            }
         }
 
         async function createNewChat() {
@@ -555,7 +703,7 @@
                 } else {
                     messageDiv.innerHTML = `
                         <div class="flex gap-3 items-start max-w-full w-full">
-                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-sm mt-1">G</div>
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-sm mt-1">י</div>
                             <div class="assistant-bubble message-bubble max-w-none">
                                 ${formatMessage(content)}
                             </div>
@@ -606,7 +754,7 @@
         }
 
         function escapeHtml(unsafe) {
-            return unsafe
+            return String(unsafe ?? '')
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
@@ -625,13 +773,98 @@
             renderChatList();
         }
 
+        async function uploadFileToStorage(file) {
+            if (!currentUser) return null;
+            const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+            const storageRef = ref(storage, `uploads/${currentUser.uid}/${Date.now()}-${safeName}`);
+            const result = await uploadBytes(storageRef, file);
+            return getDownloadURL(result.ref);
+        }
+
+        async function readImageDetails(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => resolve({
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        width: img.width,
+                        height: img.height,
+                        previewUrl: reader.result
+                    });
+                    img.onerror = () => resolve({
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        width: null,
+                        height: null,
+                        previewUrl: reader.result
+                    });
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function readHtmlContent(file) {
+            const text = await file.text();
+            return text.slice(0, 3000);
+        }
+
+        async function processPendingUploads() {
+            if (!pendingUploads.length) return '';
+            const segments = [];
+            for (const file of pendingUploads) {
+                try {
+                    const url = await uploadFileToStorage(file);
+                    if (file.type.startsWith('image/')) {
+                        const details = await readImageDetails(file);
+                        segments.push(
+                            `קובץ תמונה הועלה: ${details.name} (${details.width || '?'}x${details.height || '?'}, ${Math.round(details.size / 1024)}KB). URL: ${url}.`
+                        );
+                    } else if (file.name.toLowerCase().endsWith('.html') || file.type.includes('html')) {
+                        const htmlSnippet = await readHtmlContent(file);
+                        segments.push(
+                            `קובץ HTML הועלה: ${file.name}. URL: ${url}. תוכן מקוצר:\n\`\`\`html\n${htmlSnippet}\n\`\`\`\nנתח את המבנה והבן מה המשתמש רוצה לשנות.`
+                        );
+                    } else {
+                        segments.push(`קובץ הועלה: ${file.name}. URL: ${url}.`);
+                    }
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    segments.push(`העלאה נכשלה עבור ${file.name}.`);
+                }
+            }
+            return segments.join('\n');
+        }
+
+        function triggerFileUpload() {
+            fileInput.click();
+        }
+
+        function renderUploadPreview() {
+            uploadPreview.innerHTML = pendingUploads.map(file => `
+                <span class="upload-badge">
+                    <i class="fa-solid ${file.type.startsWith('image/') ? 'fa-image' : 'fa-file-code'}"></i>
+                    ${escapeHtml(file.name)}
+                </span>
+            `).join('');
+        }
+
         async function sendMessage() {
             const userText = input.value.trim();
-            if (!userText || !currentUser) return;
+            if ((!userText && !pendingUploads.length) || !currentUser) return;
+
+            const uploadedContext = await processPendingUploads();
+            const finalText = [userText, uploadedContext].filter(Boolean).join('\n\n');
 
             const chatId = activeChatId;
-            await addMessage('user', userText, chatId);
+            await addMessage('user', finalText, chatId);
             input.value = '';
+            pendingUploads = [];
+            renderUploadPreview();
 
             const requestId = `typing-${++requestCounter}`;
             const typingDiv = document.createElement('div');
@@ -639,14 +872,14 @@
             typingDiv.className = 'flex justify-start';
             typingDiv.innerHTML = `
                 <div class="flex gap-3 items-start">
-                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-white text-sm mt-1">G</div>
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-white text-sm mt-1">י</div>
                     <div class="bg-slate-100 border border-slate-200 rounded-2xl px-5 py-3 flex items-center gap-2">
                         <div class="flex space-x-1">
                             <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
                             <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
                             <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                         </div>
-                        <span class="text-slate-500 text-sm">Grok חושב...</span>
+                        <span class="text-slate-500 text-sm">יזם חושב...</span>
                     </div>
                 </div>
             `;
@@ -710,7 +943,9 @@
         }
 
         function openContact() {
-            window.location.href = 'mailto:support@example.com?subject=יצירת קשר מאפליקציית Grok Builder';
+            const subject = encodeURIComponent('יצירת קשר מבונה אתרים עם יזם אתרים');
+            const body = encodeURIComponent('היי, אשמח לעזרה בנושא:');
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=support@gmail.com&su=${subject}&body=${body}`, '_blank');
         }
 
         function openPremium() {
@@ -734,6 +969,7 @@
 
         function exportChatHtml() {
             const currentChat = getCurrentChat();
+            if (!currentChat) return '';
             const rows = currentChat.messages.map(msg => `
                 <article style="margin:12px 0;padding:14px;border-radius:12px;border:1px solid #e2e8f0;background:${msg.role === 'user' ? '#dbeafe' : '#fff'}">
                     <h4 style="margin:0 0 8px 0;font-family:Arial">${msg.role === 'user' ? 'משתמש' : 'עוזר'}</h4>
@@ -764,17 +1000,80 @@
             }
 
             const url = URL.createObjectURL(file);
-            const choice = prompt('כתוב: 1 לוואטסאפ, 2 למייל, או כל דבר אחר להורדה בלבד');
+            const choice = prompt('כתוב: 1 לוואטסאפ, 2 ל-Gmail, או כל דבר אחר להורדה בלבד');
             if (choice === '1') {
                 window.open(`https://wa.me/?text=${encodeURIComponent('מצורף סיכום צ׳אט. הורד/י את הקובץ מהדפדפן: ' + url)}`, '_blank');
             } else if (choice === '2') {
-                window.location.href = `mailto:?subject=${encodeURIComponent('ייצוא צ׳אט HTML')}&body=${encodeURIComponent('מצורף לינק לקובץ הצ׳אט (זמני): ' + url)}`;
+                const subject = encodeURIComponent('ייצוא צ׳אט HTML');
+                const body = encodeURIComponent('מצורף לינק לקובץ הצ׳אט (זמני): ' + url);
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
             }
 
             const dl = document.createElement('a');
             dl.href = url;
             dl.download = file.name;
             dl.click();
+        }
+
+        function collectHtmlExports() {
+            const exports = [];
+            chats.forEach(chat => {
+                (chat.messages || []).forEach((msg, index) => {
+                    if (msg.role !== 'assistant') return;
+                    const matches = msg.content.match(/```(?:html)?\n([\s\S]*?)```/g) || [];
+                    matches.forEach((block, blockIndex) => {
+                        const clean = block.replace(/```(?:html)?\n?/g, '').replace(/```$/, '').trim();
+                        exports.push({
+                            name: `${chat.title || 'chat'}-${index + 1}-${blockIndex + 1}.html`,
+                            content: clean
+                        });
+                    });
+                });
+            });
+            return exports;
+        }
+
+        function openHtmlFilesPanel() {
+            const files = collectHtmlExports();
+            if (!files.length) {
+                htmlFilesList.innerHTML = '<p class="text-sm text-slate-500">עדיין אין קבצי HTML בשיחות.</p>';
+            } else {
+                htmlFilesList.innerHTML = files.map((file, i) => `
+                    <div class="border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div class="text-sm text-slate-700 truncate">${escapeHtml(file.name)}</div>
+                        <button class="action-btn" onclick="downloadHtmlFromPanel(${i})"><i class="fa-solid fa-download"></i> הורד</button>
+                    </div>
+                `).join('');
+            }
+            window.__htmlExports = files;
+            htmlFilesModal.classList.remove('hidden');
+            htmlFilesModal.classList.add('flex');
+        }
+
+        function closeHtmlFilesPanel() {
+            htmlFilesModal.classList.add('hidden');
+            htmlFilesModal.classList.remove('flex');
+        }
+
+        function downloadHtmlFromPanel(index) {
+            const file = (window.__htmlExports || [])[index];
+            if (!file) return;
+            const blob = new Blob([file.content], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.name;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function shareSpecificChat(chatId) {
+            const originalActive = activeChatId;
+            activeChatId = chatId;
+            await shareChat();
+            activeChatId = originalActive;
+            openMenuChatId = null;
+            renderChatList();
         }
 
         window.copyCode = function(button) {
@@ -792,7 +1091,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `grok-site-${Date.now()}.html`;
+            link.download = `יזם-אתרים-${Date.now()}.html`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -872,6 +1171,18 @@
         loginButton.addEventListener('click', signInWithGoogle);
         emailLoginButton.addEventListener('click', signInWithEmailPassword);
         emailSignupButton.addEventListener('click', signUpWithEmailPassword);
+        fileInput.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files || []);
+            pendingUploads = [...pendingUploads, ...files];
+            renderUploadPreview();
+            fileInput.value = '';
+        });
+        document.addEventListener('click', () => {
+            if (openMenuChatId) {
+                openMenuChatId = null;
+                renderChatList();
+            }
+        });
         [emailInput, passwordInput].forEach((field) => {
             field.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
@@ -923,6 +1234,13 @@
         window.openPremium = openPremium;
         window.duplicateCurrentChat = duplicateCurrentChat;
         window.shareChat = shareChat;
+        window.shareSpecificChat = shareSpecificChat;
+        window.toggleChatMenu = toggleChatMenu;
+        window.deleteChatById = deleteChatById;
+        window.triggerFileUpload = triggerFileUpload;
+        window.openHtmlFilesPanel = openHtmlFilesPanel;
+        window.closeHtmlFilesPanel = closeHtmlFilesPanel;
+        window.downloadHtmlFromPanel = downloadHtmlFromPanel;
     </script>
 </body>
 </html>
