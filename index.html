@@ -320,6 +320,38 @@
         .typing-min span:nth-child(2) { animation-delay: 0.2s; }
         .typing-min span:nth-child(3) { animation-delay: 0.4s; }
 
+        .public-link-box {
+            margin: 10px 12px 12px;
+            padding: 10px;
+            border: 1px solid #dbeafe;
+            background: #f8fbff;
+            border-radius: 12px;
+        }
+
+        .public-link-status {
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        .public-link-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .public-link-input {
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            background: #fff;
+            color: #0f172a;
+        }
+
         @keyframes pulseDots {
             0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
             40% { opacity: 1; transform: translateY(-2px); }
@@ -525,6 +557,7 @@
         let openMenuChatId = null;
         let pendingUploads = [];
         const pendingByChat = new Map();
+        const htmlPublicLinks = new Map();
 
         const authBanner = document.getElementById('auth-banner');
         const appShell = document.getElementById('app-shell');
@@ -726,7 +759,10 @@
                     parts.push(escapeHtml(textPart).replace(/\n/g, '<br>'));
                 }
 
-                const escapedCode = escapeHtml(match[1].trim());
+                const htmlCode = match[1].trim();
+                const escapedCode = escapeHtml(htmlCode);
+                const codeId = `html-${simpleHash(htmlCode)}`;
+                const existingUrl = htmlPublicLinks.get(codeId) || '';
                 parts.push(`<div class="code-card">
                     <div class="code-header">
                         <span>קובץ HTML מוכן לשימוש</span>
@@ -737,9 +773,21 @@
                             <button onclick="downloadCode(this)" class="action-btn">
                                 <i class="fa-solid fa-download"></i> הורד
                             </button>
+                            <button onclick="createPublicHtmlLink(this)" class="action-btn">
+                                <i class="fa-solid fa-link"></i> צור קישור ציבורי
+                            </button>
                         </div>
                     </div>
-                    <pre><code>${escapedCode}</code></pre>
+                    <pre><code data-code-id="${codeId}">${escapedCode}</code></pre>
+                    <div class="public-link-box">
+                        <div class="public-link-status">${existingUrl ? 'הקישור הציבורי נוצר בהצלחה.' : 'עדיין לא נוצר קישור ציבורי.'}</div>
+                        <div class="public-link-row">
+                            <input class="public-link-input" type="text" readonly value="${escapeHtml(existingUrl)}" placeholder="כאן יופיע הקישור הציבורי מ-Firebase Storage">
+                            <button onclick="copyPublicLink(this)" class="action-btn" ${existingUrl ? '' : 'disabled'}>
+                                <i class="fa-solid fa-copy"></i> העתק קישור
+                            </button>
+                        </div>
+                    </div>
                 </div>`);
 
                 lastIndex = regex.lastIndex;
@@ -760,6 +808,15 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+        }
+
+        function simpleHash(text) {
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = ((hash << 5) - hash) + text.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(36);
         }
 
         function setChatPending(chatId, isPending) {
@@ -1100,6 +1157,74 @@
             const original = button.innerHTML;
             button.innerHTML = '<i class="fa-solid fa-circle-check"></i> ירד בהצלחה';
             setTimeout(() => button.innerHTML = original, 1600);
+        };
+
+        async function uploadHtmlToFirebaseStorage(htmlContent, uid) {
+            const timestamp = Date.now();
+            const fileName = `site-${timestamp}.html`;
+            const filePath = `public-pages/${uid}/${fileName}`;
+            const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+            const storageRef = ref(storage, filePath);
+            const uploadResult = await uploadBytes(storageRef, htmlBlob, { contentType: 'text/html' });
+            return getDownloadURL(uploadResult.ref);
+        }
+
+        window.createPublicHtmlLink = async function(button) {
+            const codeElement = button.closest('.code-card')?.querySelector('pre code');
+            const status = button.closest('.code-card')?.querySelector('.public-link-status');
+            const linkInput = button.closest('.code-card')?.querySelector('.public-link-input');
+            const copyLinkBtn = button.closest('.code-card')?.querySelector('.public-link-row .action-btn');
+            const htmlContent = codeElement?.textContent || '';
+
+            if (!currentUser) {
+                if (status) status.textContent = 'אין משתמש מחובר. יש להתחבר כדי ליצור קישור ציבורי.';
+                alert('אין משתמש מחובר. התחבר/י כדי להעלות HTML ל-Firebase Storage.');
+                return;
+            }
+
+            if (!htmlContent.trim()) {
+                if (status) status.textContent = 'לא נמצא תוכן HTML להעלאה.';
+                return;
+            }
+
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> מעלה...';
+            if (status) status.textContent = 'מעלה את קובץ ה-HTML ל-Firebase Storage...';
+
+            try {
+                const publicUrl = await uploadHtmlToFirebaseStorage(htmlContent, currentUser.uid);
+                const codeId = codeElement.dataset.codeId || `html-${simpleHash(htmlContent)}`;
+                htmlPublicLinks.set(codeId, publicUrl);
+                if (linkInput) linkInput.value = publicUrl;
+                if (status) status.textContent = 'הצלחה! התקבל קישור ציבורי תקין.';
+                if (copyLinkBtn) copyLinkBtn.disabled = false;
+                alert('הקישור הציבורי נוצר בהצלחה ונשמר ב-Firebase Storage.');
+            } catch (error) {
+                console.error('Public HTML upload failed:', error);
+                const details = error?.message ? `פרטים: ${error.message}` : 'לא התקבלו פרטים נוספים מהמערכת.';
+                if (status) status.textContent = `שגיאה בהעלאה ל-Storage. ${details}`;
+                alert(`העלאה ל-Firebase Storage נכשלה. ${details}`);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        };
+
+        window.copyPublicLink = function(button) {
+            const input = button.closest('.public-link-row')?.querySelector('.public-link-input');
+            const status = button.closest('.public-link-box')?.querySelector('.public-link-status');
+            const url = input?.value?.trim();
+            if (!url) {
+                if (status) status.textContent = 'אין קישור להעתקה עדיין.';
+                return;
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                const original = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check"></i> הועתק קישור';
+                if (status) status.textContent = 'הקישור הועתק ללוח בהצלחה.';
+                setTimeout(() => button.innerHTML = original, 1600);
+            });
         };
 
         async function signInWithGoogle() {
