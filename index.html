@@ -352,6 +352,41 @@
             color: #0f172a;
         }
 
+        .qr-banner-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            padding: 16px;
+        }
+
+        .qr-banner-overlay.show {
+            display: flex;
+        }
+
+        .qr-banner-card {
+            width: min(92vw, 360px);
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #dbeafe;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .qr-banner-image {
+            width: 220px;
+            height: 220px;
+            margin: 10px auto;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            object-fit: cover;
+            background: #f8fafc;
+        }
+
         @keyframes pulseDots {
             0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
             40% { opacity: 1; transform: translateY(-2px); }
@@ -502,6 +537,16 @@
             <div id="html-files-list" class="mt-3 max-h-[60vh] overflow-auto space-y-2"></div>
         </div>
     </div>
+    <div id="qr-banner" class="qr-banner-overlay" onclick="closeQrBanner(event)">
+        <div class="qr-banner-card">
+            <div class="flex items-center justify-between gap-2">
+                <h3 class="text-base font-semibold text-slate-900">קוד QR לקישור הציבורי</h3>
+                <button onclick="closeQrBanner(event)" class="ghost-btn !py-1 !px-3 text-xs">סגור</button>
+            </div>
+            <img id="qr-banner-image" class="qr-banner-image" alt="QR Code">
+            <p id="qr-banner-link" class="text-xs text-slate-500 break-all"></p>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -580,6 +625,9 @@
         const uploadPreview = document.getElementById('upload-preview');
         const htmlFilesModal = document.getElementById('html-files-modal');
         const htmlFilesList = document.getElementById('html-files-list');
+        const qrBanner = document.getElementById('qr-banner');
+        const qrBannerImage = document.getElementById('qr-banner-image');
+        const qrBannerLink = document.getElementById('qr-banner-link');
 
         function toggleMenu() {
             topMenu.classList.toggle('hidden-panel');
@@ -783,8 +831,11 @@
                         <div class="public-link-status">${existingUrl ? 'הקישור הציבורי נוצר בהצלחה.' : 'עדיין לא נוצר קישור ציבורי.'}</div>
                         <div class="public-link-row">
                             <input class="public-link-input" type="text" readonly value="${escapeHtml(existingUrl)}" placeholder="כאן יופיע הקישור הציבורי מ-Firebase Storage">
-                            <button onclick="copyPublicLink(this)" class="action-btn" ${existingUrl ? '' : 'disabled'}>
+                            <button onclick="copyPublicLink(this)" class="action-btn copy-link-btn" ${existingUrl ? '' : 'disabled'}>
                                 <i class="fa-solid fa-copy"></i> העתק קישור
+                            </button>
+                            <button onclick="showQrForLink(this)" class="action-btn qr-link-btn" ${existingUrl ? '' : 'disabled'}>
+                                <i class="fa-solid fa-qrcode"></i> קוד QR
                             </button>
                         </div>
                     </div>
@@ -1096,10 +1147,29 @@
                 htmlFilesList.innerHTML = '<p class="text-sm text-slate-500">עדיין אין קבצי HTML בשיחות.</p>';
             } else {
                 htmlFilesList.innerHTML = files.map((file, i) => `
-                    <div class="border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                    ${(() => {
+                        const panelKey = `panel-${simpleHash(file.content)}`;
+                        const existingUrl = htmlPublicLinks.get(panelKey) || '';
+                        return `
+                    <div class="border border-slate-200 rounded-xl p-3 space-y-2">
                         <div class="text-sm text-slate-700 truncate">${escapeHtml(file.name)}</div>
-                        <button class="action-btn" onclick="downloadHtmlFromPanel(${i})"><i class="fa-solid fa-download"></i> הורד</button>
+                        <div class="public-link-row">
+                            <button class="action-btn" onclick="downloadHtmlFromPanel(${i})"><i class="fa-solid fa-download"></i> הורד</button>
+                            <button class="action-btn" onclick="createPublicLinkFromPanel(${i}, this)"><i class="fa-solid fa-link"></i> צור קישור ציבורי</button>
+                        </div>
+                        <div class="public-link-row">
+                            <input id="panel-public-link-${i}" class="public-link-input" type="text" readonly value="${escapeHtml(existingUrl)}" placeholder="כאן יופיע קישור ציבורי לקובץ HTML מהתיקייה">
+                            <button class="action-btn" onclick="copyPublicLinkFromPanel(${i}, this)" ${existingUrl ? '' : 'disabled'}>
+                                <i class="fa-solid fa-copy"></i> העתק קישור
+                            </button>
+                            <button class="action-btn" onclick="showQrFromPanel(${i})" ${existingUrl ? '' : 'disabled'}>
+                                <i class="fa-solid fa-qrcode"></i> קוד QR
+                            </button>
+                        </div>
+                        <p id="panel-public-status-${i}" class="text-xs text-slate-500">${existingUrl ? 'הקישור הציבורי זמין.' : 'עדיין לא נוצר קישור ציבורי.'}</p>
                     </div>
+                        `;
+                    })()}
                 `).join('');
             }
             window.__htmlExports = files;
@@ -1173,7 +1243,8 @@
             const codeElement = button.closest('.code-card')?.querySelector('pre code');
             const status = button.closest('.code-card')?.querySelector('.public-link-status');
             const linkInput = button.closest('.code-card')?.querySelector('.public-link-input');
-            const copyLinkBtn = button.closest('.code-card')?.querySelector('.public-link-row .action-btn');
+            const copyLinkBtn = button.closest('.code-card')?.querySelector('.copy-link-btn');
+            const qrLinkBtn = button.closest('.code-card')?.querySelector('.qr-link-btn');
             const htmlContent = codeElement?.textContent || '';
 
             if (!currentUser) {
@@ -1199,6 +1270,7 @@
                 if (linkInput) linkInput.value = publicUrl;
                 if (status) status.textContent = 'הצלחה! התקבל קישור ציבורי תקין.';
                 if (copyLinkBtn) copyLinkBtn.disabled = false;
+                if (qrLinkBtn) qrLinkBtn.disabled = false;
                 alert('הקישור הציבורי נוצר בהצלחה ונשמר ב-Firebase Storage.');
             } catch (error) {
                 console.error('Public HTML upload failed:', error);
@@ -1225,6 +1297,81 @@
                 if (status) status.textContent = 'הקישור הועתק ללוח בהצלחה.';
                 setTimeout(() => button.innerHTML = original, 1600);
             });
+        };
+
+        window.showQrForLink = function(button) {
+            const input = button.closest('.public-link-row')?.querySelector('.public-link-input');
+            const url = input?.value?.trim();
+            if (!url) return;
+            openQrBanner(url);
+        };
+
+        window.createPublicLinkFromPanel = async function(index, button) {
+            const file = (window.__htmlExports || [])[index];
+            if (!file) return;
+            const status = document.getElementById(`panel-public-status-${index}`);
+            const input = document.getElementById(`panel-public-link-${index}`);
+            const row = input?.closest('.public-link-row');
+            const copyBtn = row?.querySelector('button:nth-of-type(1)');
+            const qrBtn = row?.querySelector('button:nth-of-type(2)');
+
+            if (!currentUser) {
+                if (status) status.textContent = 'אין משתמש מחובר. התחבר/י כדי ליצור קישור ציבורי.';
+                return;
+            }
+
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> מעלה...';
+            if (status) status.textContent = 'מעלה את הקובץ ל-Firebase Storage...';
+
+            try {
+                const publicUrl = await uploadHtmlToFirebaseStorage(file.content, currentUser.uid);
+                const panelKey = `panel-${simpleHash(file.content)}`;
+                htmlPublicLinks.set(panelKey, publicUrl);
+                if (input) input.value = publicUrl;
+                if (copyBtn) copyBtn.disabled = false;
+                if (qrBtn) qrBtn.disabled = false;
+                if (status) status.textContent = 'הקישור הציבורי נוצר בהצלחה.';
+            } catch (error) {
+                console.error('Panel public link failed:', error);
+                if (status) status.textContent = 'שגיאה בהעלאת הקובץ. נסה/י שוב.';
+            } finally {
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        };
+
+        window.copyPublicLinkFromPanel = function(index, button) {
+            const input = document.getElementById(`panel-public-link-${index}`);
+            const status = document.getElementById(`panel-public-status-${index}`);
+            const url = input?.value?.trim();
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(() => {
+                const original = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check"></i> הועתק קישור';
+                if (status) status.textContent = 'הקישור הועתק ללוח.';
+                setTimeout(() => button.innerHTML = original, 1600);
+            });
+        };
+
+        window.showQrFromPanel = function(index) {
+            const input = document.getElementById(`panel-public-link-${index}`);
+            const url = input?.value?.trim();
+            if (!url) return;
+            openQrBanner(url);
+        };
+
+        function openQrBanner(url) {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=440x440&data=${encodeURIComponent(url)}`;
+            qrBannerImage.src = qrUrl;
+            qrBannerLink.textContent = url;
+            qrBanner.classList.add('show');
+        }
+
+        window.closeQrBanner = function(event) {
+            if (event && event.target !== qrBanner && !event.target.closest('.ghost-btn')) return;
+            qrBanner.classList.remove('show');
         };
 
         async function signInWithGoogle() {
