@@ -321,6 +321,47 @@
         .typing-min span:nth-child(2) { animation-delay: 0.2s; }
         .typing-min span:nth-child(3) { animation-delay: 0.4s; }
 
+        .mic-btn {
+            border: 1px solid #dbeafe;
+            background: linear-gradient(145deg, #ffffff, #eef2ff);
+            color: #4338ca;
+            position: relative;
+        }
+
+        .mic-btn:hover {
+            background: linear-gradient(145deg, #eef2ff, #e0e7ff);
+            border-color: #c7d2fe;
+        }
+
+        .mic-btn.recording {
+            color: #ffffff;
+            border-color: #ef4444;
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+            animation: micPulse 1.2s ease-in-out infinite;
+        }
+
+        .mic-btn.recording::after {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 999px;
+            border: 2px solid rgba(239, 68, 68, 0.35);
+        }
+
+        .mic-status {
+            min-height: 18px;
+        }
+
+        @keyframes micPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+
         .public-link-box {
             margin: 10px 12px 12px;
             padding: 10px;
@@ -517,6 +558,9 @@
                            type="text"
                            class="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-full px-6 py-4 outline-none text-base text-slate-900"
                            placeholder="תאר את האתר שתרצה לבנות או לשפר...">
+                    <button id="mic-btn" type="button" class="mic-btn w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-md shadow-indigo-100" title="הקלטה קולית">
+                        <i class="fa-solid fa-microphone text-xl"></i>
+                    </button>
                     <button type="button" onclick="shareChat()" class="bg-emerald-500 hover:bg-emerald-600 w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-md shadow-emerald-200" title="שתף צ'אט">
                         <i class="fa-solid fa-share-nodes text-white text-xl"></i>
                     </button>
@@ -524,6 +568,7 @@
                         <i class="fa-solid fa-paper-plane text-white text-xl"></i>
                     </button>
                 </form>
+                <p id="mic-status" class="mic-status mt-2 text-xs text-slate-500"></p>
                 <div id="upload-preview" class="mt-2"></div>
             </div>
         </div>
@@ -619,6 +664,8 @@
         const chatMessages = document.getElementById('chat-messages');
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
+        const micButton = document.getElementById('mic-btn');
+        const micStatus = document.getElementById('mic-status');
         const topMenu = document.getElementById('top-menu');
         const chatList = document.getElementById('chat-list');
         const chatsCount = document.getElementById('chats-count');
@@ -629,6 +676,107 @@
         const qrBanner = document.getElementById('qr-banner');
         const qrBannerImage = document.getElementById('qr-banner-image');
         const qrBannerLink = document.getElementById('qr-banner-link');
+        const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isRecording = false;
+        let speechFinalText = '';
+        let speechInterimText = '';
+
+        function updateSpeechInput() {
+            const mergedText = [speechFinalText, speechInterimText].filter(Boolean).join(' ').trim();
+            if (mergedText) {
+                input.value = mergedText;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function setMicState(recording) {
+            isRecording = recording;
+            micButton?.classList.toggle('recording', recording);
+            micButton?.setAttribute('aria-pressed', recording ? 'true' : 'false');
+            if (recording) {
+                micButton.title = 'עצור הקלטה';
+                micStatus.textContent = 'מקליט... אפשר לדבר בעברית.';
+            } else {
+                micButton.title = 'הקלטה קולית';
+                if (!micStatus.textContent.includes('לא נתמך')) {
+                    micStatus.textContent = speechFinalText ? 'ההקלטה הסתיימה. אפשר לערוך או לשלוח.' : '';
+                }
+            }
+        }
+
+        function stopSpeechRecognition() {
+            if (!recognition || !isRecording) return;
+            recognition.stop();
+        }
+
+        function startSpeechRecognition() {
+            if (!SpeechRecognitionClass) {
+                micStatus.textContent = 'הדפדפן לא תומך בהקלדה קולית. מומלץ להשתמש ב-Chrome מעודכן.';
+                return;
+            }
+
+            speechFinalText = input.value.trim();
+            speechInterimText = '';
+
+            if (!recognition) {
+                recognition = new SpeechRecognitionClass();
+                recognition.lang = 'he-IL';
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = (event) => {
+                    let finalChunk = '';
+                    let interimChunk = '';
+                    for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                        const transcript = event.results[i][0]?.transcript?.trim() || '';
+                        if (!transcript) continue;
+                        if (event.results[i].isFinal) {
+                            finalChunk += `${transcript} `;
+                        } else {
+                            interimChunk += `${transcript} `;
+                        }
+                    }
+                    if (finalChunk) {
+                        speechFinalText = [speechFinalText, finalChunk.trim()].filter(Boolean).join(' ').trim();
+                    }
+                    speechInterimText = interimChunk.trim();
+                    updateSpeechInput();
+                };
+
+                recognition.onerror = (event) => {
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        micStatus.textContent = 'אין הרשאת מיקרופון. אשר/י הרשאה כדי להשתמש בהקלטה קולית.';
+                    } else if (event.error === 'no-speech') {
+                        micStatus.textContent = 'לא זוהה דיבור. נסה/י שוב.';
+                    } else if (event.error !== 'aborted') {
+                        micStatus.textContent = `שגיאת זיהוי קול: ${event.error}`;
+                    }
+                };
+
+                recognition.onend = () => {
+                    speechInterimText = '';
+                    updateSpeechInput();
+                    setMicState(false);
+                };
+            }
+
+            try {
+                recognition.start();
+                setMicState(true);
+            } catch (error) {
+                if (!isRecording) {
+                    micStatus.textContent = 'לא ניתן להתחיל הקלטה כרגע. נסה/י שוב.';
+                }
+            }
+        }
+
+        if (!SpeechRecognitionClass) {
+            micButton.disabled = true;
+            micButton.classList.add('opacity-60', 'cursor-not-allowed');
+            micStatus.textContent = 'הקלדה קולית אינה נתמכת בדפדפן הזה.';
+        }
 
         function toggleMenu() {
             topMenu.classList.toggle('hidden-panel');
@@ -1467,7 +1615,15 @@
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            stopSpeechRecognition();
             sendMessage();
+        });
+        micButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopSpeechRecognition();
+            } else {
+                startSpeechRecognition();
+            }
         });
 
         onAuthStateChanged(auth, (user) => {
