@@ -646,6 +646,8 @@
         let pendingUploads = [];
         const pendingByChat = new Map();
         const htmlPublicLinks = new Map();
+        const CHAT_API_URL = 'https://noisy-dust-c360.zm0548407450.workers.dev/api/chat';
+        const MAX_CONTEXT_MESSAGES = 6;
 
         const authBanner = document.getElementById('auth-banner');
         const appShell = document.getElementById('app-shell');
@@ -1164,6 +1166,34 @@
             fileInput.click();
         }
 
+        function extractLatestHtmlFromMessages(messages) {
+            if (!Array.isArray(messages) || messages.length === 0) return '';
+            for (let i = messages.length - 1; i >= 0; i--) {
+                const message = messages[i];
+                if (message?.role !== 'assistant') continue;
+                const content = String(message?.content || '');
+                const blocks = [...content.matchAll(/```(?:html)?\n([\s\S]*?)```/g)];
+                if (blocks.length > 0) {
+                    const latestBlock = blocks[blocks.length - 1]?.[1] || '';
+                    return String(latestBlock).trim();
+                }
+            }
+            return '';
+        }
+
+        function buildRequestMeta(chatId, fullConversation, existingHtml) {
+            return {
+                chatId,
+                sentAt: new Date().toISOString(),
+                locale: 'he-IL',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                hasExistingHtml: Boolean(existingHtml),
+                fullConversationLength: fullConversation.length,
+                contextWindowSize: MAX_CONTEXT_MESSAGES,
+                clientVersion: 'web-v1'
+            };
+        }
+
         function renderUploadPreview() {
             uploadPreview.innerHTML = pendingUploads.map(file => `
                 <span class="upload-badge">
@@ -1211,11 +1241,18 @@
             try {
                 const sourceChat = chats.find(chat => chat.id === chatId);
                 const fullConversation = Array.isArray(sourceChat?.messages) ? sourceChat.messages : [];
-                const messagesForAI = fullConversation.slice(-6);
-                const res = await fetch('https://noisy-dust-c360.zm0548407450.workers.dev/api/chat', {
+                const messagesForAI = fullConversation.slice(-MAX_CONTEXT_MESSAGES);
+                const existingHtml = extractLatestHtmlFromMessages(fullConversation);
+                const requestMeta = buildRequestMeta(chatId, fullConversation, existingHtml);
+
+                const res = await fetch(CHAT_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: messagesForAI })
+                    body: JSON.stringify({
+                        messages: messagesForAI,
+                        existingHtml,
+                        requestMeta
+                    })
                 });
 
                 const data = await res.json();
