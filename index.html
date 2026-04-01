@@ -639,7 +639,6 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
         const provider = new GoogleAuthProvider();
-        const CHAT_CACHE_KEY_PREFIX = 'chat-cache-v1';
 
         let chats = [];
         let activeChatId = null;
@@ -682,32 +681,6 @@
         let isRecording = false;
         let speechFinalText = '';
         let speechInterimText = '';
-
-        function getChatCacheKey(uid) {
-            return `${CHAT_CACHE_KEY_PREFIX}:${uid}`;
-        }
-
-        function saveChatsToLocalCache(uid, chatsList) {
-            if (!uid) return;
-            try {
-                localStorage.setItem(getChatCacheKey(uid), JSON.stringify(chatsList));
-            } catch (error) {
-                console.warn('Could not write chat cache:', error);
-            }
-        }
-
-        function loadChatsFromLocalCache(uid) {
-            if (!uid) return [];
-            try {
-                const raw = localStorage.getItem(getChatCacheKey(uid));
-                if (!raw) return [];
-                const parsed = JSON.parse(raw);
-                return Array.isArray(parsed) ? parsed : [];
-            } catch (error) {
-                console.warn('Could not read chat cache:', error);
-                return [];
-            }
-        }
 
         function updateSpeechInput() {
             const mergedText = [speechFinalText, speechInterimText].filter(Boolean).join(' ').trim();
@@ -822,7 +795,6 @@
                 createdAt: chat.createdAt || Date.now(),
                 messages: safeMessages
             }, { merge: true });
-            saveChatsToLocalCache(currentUser.uid, chats);
         }
 
         function subscribeToChats() {
@@ -845,7 +817,6 @@
                         messages: Array.isArray(data.messages) ? data.messages : []
                     };
                 });
-                saveChatsToLocalCache(currentUser.uid, chats);
 
                 if (!chats.length) {
                     await createNewChat();
@@ -860,17 +831,7 @@
                 renderMessages();
             }, (error) => {
                 console.error('Firestore listener error:', error);
-                const cachedChats = loadChatsFromLocalCache(currentUser?.uid);
-                if (cachedChats.length) {
-                    chats = cachedChats;
-                    if (!activeChatId || !chats.some(chat => chat.id === activeChatId)) {
-                        activeChatId = chats[0]?.id || null;
-                    }
-                    renderChatList();
-                    renderMessages();
-                } else {
-                    alert('שגיאה בטעינת השיחות מ-Firebase. בדוק הרשאות Firestore.');
-                }
+                alert('שגיאה בטעינת השיחות מ-Firebase. בדוק הרשאות Firestore.');
             });
         }
 
@@ -1185,12 +1146,11 @@
 
             try {
                 const sourceChat = chats.find(chat => chat.id === chatId);
-                const fullConversation = [...(sourceChat?.messages || [])];
-                const messagesForAI = fullConversation.slice(-6);
+                const payloadMessages = [...(sourceChat?.messages || [])];
                 const res = await fetch('https://noisy-dust-c360.zm0548407450.workers.dev/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: messagesForAI })
+                    body: JSON.stringify({ messages: payloadMessages })
                 });
 
                 const data = await res.json();
@@ -1690,13 +1650,6 @@
             userChip.classList.remove('hidden');
             logoutButton.classList.remove('hidden');
             userEmail.textContent = user.email || 'משתמש מחובר';
-            const cachedChats = loadChatsFromLocalCache(user.uid);
-            if (cachedChats.length) {
-                chats = cachedChats;
-                activeChatId = chats[0]?.id || activeChatId;
-                renderChatList();
-                renderMessages();
-            }
             subscribeToChats();
         });
 
