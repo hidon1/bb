@@ -23,7 +23,7 @@ export default {
     if (request.method === "GET" && url.pathname === "/api/chat") {
       return json({
         ok: true,
-        message: "use POST with { messages: [...], existingHtml?: string, requestMeta?: object }"
+        message: "use POST with { sessionId, messages: [...], existingHtml?: string, requestMeta?: object, messagesMode?: 'replace'|'append', resetSession?: boolean }"
       }, 200, corsHeaders);
     }
 
@@ -42,19 +42,52 @@ export default {
         const incomingMessages = Array.isArray(body.messages) ? body.messages : [];
         const existingHtml = String(body.existingHtml || "").trim();
         const requestMeta = typeof body.requestMeta === "object" && body.requestMeta ? body.requestMeta : {};
+        const sessionId = resolveSessionId_(body, requestMeta);
+        const resetSession = Boolean(body.resetSession);
+        const messagesMode = body.messagesMode === "append" ? "append" : "replace";
+
+        if (!sessionId) {
+          return json({
+            ok: false,
+            error: "Missing sessionId (body.sessionId or requestMeta.sessionId)"
+          }, 400, corsHeaders);
+        }
+
+        if (resetSession) {
+          clearSession_(sessionId);
+          return json({
+            ok: true,
+            reset: true,
+            sessionId,
+            message: "Session history cleared"
+          }, 200, corsHeaders);
+        }
 
         if (!incomingMessages.length) {
           return json({ ok: false, error: "Missing messages array" }, 400, corsHeaders);
         }
 
-        const normalizedMessages = incomingMessages
+        const normalizedIncomingMessages = incomingMessages
           .map((m) => ({
             role: normalizeRole(m.role),
             content: String(m.content || "").trim()
           }))
           .filter((m) => m.content);
 
-        const lastMessages = normalizedMessages.slice(-MAX_CONTEXT_MESSAGES);
+        if (!normalizedIncomingMessages.length) {
+          return json({ ok: false, error: "messages array does not contain valid content" }, 400, corsHeaders);
+        }
+
+        const sessionState = getOrCreateSession_(sessionId);
+        if (messagesMode === "append") {
+          sessionState.messages.push(...normalizedIncomingMessages);
+        } else {
+          sessionState.messages = normalizedIncomingMessages;
+        }
+        sessionState.messages = sessionState.messages.slice(-MAX_SESSION_MESSAGES);
+        sessionState.updatedAt = Date.now();
+
+        const lastMessages = sessionState.messages.slice(-MAX_CONTEXT_MESSAGES);
         const inferredIntent = inferIntent_(lastMessages, existingHtml);
 
         const systemPrompt = `
@@ -142,6 +175,8 @@ Execution rules:
 
         return json({
           ok: true,
+          sessionId,
+          sessionMessagesStored: sessionState.messages.length,
           inferredIntent,
           usedMessagesCount: lastMessages.length,
           maxContextMessages: MAX_CONTEXT_MESSAGES,
@@ -204,6 +239,38 @@ function normalizeRole(role) {
   const r = String(role || "").toLowerCase();
   if (r === "system" || r === "assistant" || r === "user") return r;
   return "user";
+}
+
+const MAX_SESSION_MESSAGES = 100;
+const SESSION_TTL_MS = 1000 * 60 * 60 * 6;
+const chatSessions_ = new Map();
+
+function resolveSessionId_(body, requestMeta) {
+  const fromBody = String(body?.sessionId || "").trim();
+  if (fromBody) return fromBody;
+  const fromMeta = String(requestMeta?.sessionId || "").trim();
+  return fromMeta;
+}
+
+function getOrCreateSession_(sessionId) {
+  pruneExpiredSessions_();
+  if (!chatSessions_.has(sessionId)) {
+    chatSessions_.set(sessionId, { messages: [], updatedAt: Date.now() });
+  }
+  return chatSessions_.get(sessionId);
+}
+
+function clearSession_(sessionId) {
+  chatSessions_.delete(sessionId);
+}
+
+function pruneExpiredSessions_() {
+  const now = Date.now();
+  for (const [key, value] of chatSessions_) {
+    if (!value?.updatedAt || now - value.updatedAt > SESSION_TTL_MS) {
+      chatSessions_.delete(key);
+    }
+  }
 }
 
 function json(obj, status = 200, extraHeaders = {}) {
