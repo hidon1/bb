@@ -681,6 +681,38 @@
         let isRecording = false;
         let speechFinalText = '';
         let speechInterimText = '';
+        const LOCAL_CHAT_CACHE_PREFIX = 'chat-cache-v1';
+
+        function getLocalChatCacheKey(user = currentUser) {
+            if (!user?.uid) return null;
+            return `${LOCAL_CHAT_CACHE_PREFIX}:${user.uid}`;
+        }
+
+        function saveChatsToLocalCache(nextChats) {
+            const cacheKey = getLocalChatCacheKey();
+            if (!cacheKey) return;
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(nextChats));
+            } catch (error) {
+                console.warn('Local chat cache save failed:', error);
+            }
+        }
+
+        function loadChatsFromLocalCache(user = currentUser) {
+            const cacheKey = getLocalChatCacheKey(user);
+            if (!cacheKey) return [];
+            try {
+                const parsed = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+                if (!Array.isArray(parsed)) return [];
+                return parsed.map((chat) => ({
+                    ...chat,
+                    messages: Array.isArray(chat?.messages) ? chat.messages : []
+                }));
+            } catch (error) {
+                console.warn('Local chat cache read failed:', error);
+                return [];
+            }
+        }
 
         function updateSpeechInput() {
             const mergedText = [speechFinalText, speechInterimText].filter(Boolean).join(' ').trim();
@@ -795,11 +827,22 @@
                 createdAt: chat.createdAt || Date.now(),
                 messages: safeMessages
             }, { merge: true });
+            saveChatsToLocalCache(chats);
         }
 
         function subscribeToChats() {
             if (!currentUser) return;
             if (unsubscribeChats) unsubscribeChats();
+
+            const cachedChats = loadChatsFromLocalCache(currentUser);
+            if (cachedChats.length) {
+                chats = cachedChats;
+                if (!activeChatId || !chats.some(chat => chat.id === activeChatId)) {
+                    activeChatId = chats[0].id;
+                }
+                renderChatList();
+                renderMessages();
+            }
 
             const chatsQuery = query(
                 collection(db, 'users', currentUser.uid, 'chats'),
@@ -817,6 +860,7 @@
                         messages: Array.isArray(data.messages) ? data.messages : []
                     };
                 });
+                saveChatsToLocalCache(chats);
 
                 if (!chats.length) {
                     await createNewChat();
@@ -831,7 +875,18 @@
                 renderMessages();
             }, (error) => {
                 console.error('Firestore listener error:', error);
-                alert('שגיאה בטעינת השיחות מ-Firebase. בדוק הרשאות Firestore.');
+                if (!chats.length) {
+                    const fallbackChats = loadChatsFromLocalCache(currentUser);
+                    if (fallbackChats.length) {
+                        chats = fallbackChats;
+                        if (!activeChatId || !chats.some(chat => chat.id === activeChatId)) {
+                            activeChatId = chats[0].id;
+                        }
+                        renderChatList();
+                        renderMessages();
+                    }
+                }
+                alert('שגיאה בטעינת השיחות מ-Firebase. נטענו נתונים מהמטמון המקומי אם היו זמינים.');
             });
         }
 
@@ -1146,11 +1201,12 @@
 
             try {
                 const sourceChat = chats.find(chat => chat.id === chatId);
-                const payloadMessages = [...(sourceChat?.messages || [])];
+                const fullConversation = Array.isArray(sourceChat?.messages) ? sourceChat.messages : [];
+                const messagesForAI = fullConversation.slice(-6);
                 const res = await fetch('https://noisy-dust-c360.zm0548407450.workers.dev/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: payloadMessages })
+                    body: JSON.stringify({ messages: messagesForAI })
                 });
 
                 const data = await res.json();
