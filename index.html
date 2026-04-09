@@ -29,7 +29,7 @@
         .app-shell {
             max-width: 1700px;
             margin: 0 auto;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             gap: 16px;
             padding: 14px;
@@ -74,6 +74,7 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            min-height: 0;
         }
 
         .chat-container {
@@ -285,6 +286,47 @@
             justify-content: flex-end;
         }
 
+        .main-header {
+            position: sticky;
+            top: 8px;
+            z-index: 15;
+        }
+
+        .user-menu-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(140deg, #eef2ff, #ecfeff);
+            border: 1px solid #c7d2fe;
+            color: #312e81;
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .menu-btn {
+            border: 1px solid #cbd5e1;
+            background: linear-gradient(145deg, #ffffff, #eef2ff);
+            border-radius: 999px;
+            padding: 10px 14px;
+            color: #334155;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.12);
+            transition: all 0.2s ease;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-1px);
+            border-color: #a5b4fc;
+            color: #1e1b4b;
+        }
+
+        .menu-title {
+            background: linear-gradient(120deg, #312e81, #0f766e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
         .ghost-btn {
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -437,20 +479,62 @@
         @media (max-width: 1024px) {
             .app-shell {
                 flex-direction: column;
-                height: auto;
                 min-height: 100vh;
+                gap: 12px;
+                padding: 10px;
             }
 
             .history-panel {
                 width: 100%;
                 max-width: none;
                 min-width: 0;
-                max-height: 240px;
+                max-height: 230px;
             }
 
             .chat-container {
                 height: calc(100vh - 390px);
                 min-height: 340px;
+            }
+
+            .main-header {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                background: radial-gradient(circle at top right, #dbeafe 0%, #f8fafc 35%, #e0e7ff 100%);
+            }
+
+            .history-panel {
+                max-height: 200px;
+                border-radius: 20px;
+            }
+
+            .chat-container {
+                height: auto;
+                min-height: 42vh;
+            }
+
+            #chat-form {
+                flex-wrap: wrap;
+            }
+
+            #chat-form > button,
+            #chat-form > .ghost-btn {
+                flex: 0 0 auto;
+            }
+
+            #user-input {
+                order: -1;
+                width: 100%;
+                flex: 1 1 100%;
+            }
+
+            #top-menu {
+                width: min(92vw, 320px);
+                left: 0;
+                right: auto;
             }
         }
     </style>
@@ -503,31 +587,25 @@
         </aside>
 
         <div class="chat-workspace">
-            <header class="bg-white/90 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4">
+            <header class="main-header bg-white/90 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <div class="brand-logo">י</div>
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם יזם אתרים</h1>
+                        <h1 class="menu-title text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם יזם אתרים</h1>
                         <p class="text-slate-500 text-sm">שיחות ממשיכות לרוץ ברקע גם כשעוברים לצ׳אט אחר</p>
                     </div>
                 </div>
                 <div class="relative header-actions">
-                    <div id="user-chip" class="hidden items-center gap-2 text-xs bg-slate-100 border border-slate-200 rounded-full px-3 py-2">
-                        <i class="fa-regular fa-user"></i>
-                        <span id="user-email"></span>
-                    </div>
-                    <button id="logout-btn" class="ghost-btn hidden">
-                        <i class="fa-solid fa-right-from-bracket ml-1"></i> התנתק
-                    </button>
-                    <button onclick="duplicateCurrentChat()" class="ghost-btn">
-                        <i class="fa-regular fa-clone ml-1"></i> שכפל שיחה
-                    </button>
-                    <button onclick="toggleMenu()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-full text-sm text-slate-700">
+                    <button onclick="toggleMenu()" class="menu-btn flex items-center gap-2 text-sm">
                         <i class="fa-solid fa-bars"></i>
                         <span>תפריט</span>
                     </button>
                     <section id="top-menu" class="drawer hidden-panel absolute left-0 top-14 w-72 bg-white border border-slate-200 rounded-2xl p-4 shadow-lg z-20">
                         <h2 class="font-semibold text-slate-900 mb-3">אפשרויות</h2>
+                        <div id="user-chip" class="hidden user-menu-chip mb-2">
+                            <i class="fa-regular fa-user"></i>
+                            <span id="user-email"></span>
+                        </div>
                         <div class="space-y-2 text-sm">
                             <button onclick="openSettings()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
                                 <i class="fa-solid fa-gear ml-2 text-indigo-500"></i> הגדרות
@@ -540,6 +618,9 @@
                             </button>
                             <button onclick="clearChat()" class="w-full text-right bg-red-50 hover:bg-red-100 border border-red-100 text-red-700 rounded-xl p-3">
                                 <i class="fa-solid fa-trash ml-2"></i> נקה שיחה נוכחית
+                            </button>
+                            <button id="logout-btn" class="w-full text-right bg-slate-900 hover:bg-slate-800 text-white rounded-xl p-3 hidden">
+                                <i class="fa-solid fa-right-from-bracket ml-2"></i> התנתק
                             </button>
                         </div>
                     </section>
@@ -1209,21 +1290,6 @@
             alert('מנוי פרימיום יושק בהמשך: שמירת ענן, תבניות מתקדמות וחיבורים נוספים.');
         }
 
-        async function duplicateCurrentChat() {
-            const currentChat = getCurrentChat();
-            if (!currentChat || !currentUser) return;
-            const clone = {
-                ...currentChat,
-                id: crypto.randomUUID(),
-                title: `${currentChat.title} (עותק)`,
-                messages: [...currentChat.messages],
-                updatedAt: Date.now(),
-                createdAt: Date.now()
-            };
-            activeChatId = clone.id;
-            await saveChatDoc(clone);
-        }
-
         function exportChatHtml() {
             const currentChat = getCurrentChat();
             if (!currentChat) return '';
@@ -1660,7 +1726,6 @@
         window.openSettings = openSettings;
         window.openContact = openContact;
         window.openPremium = openPremium;
-        window.duplicateCurrentChat = duplicateCurrentChat;
         window.shareChat = shareChat;
         window.shareSpecificChat = shareSpecificChat;
         window.toggleChatMenu = toggleChatMenu;
