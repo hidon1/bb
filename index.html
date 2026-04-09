@@ -767,15 +767,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
                             <defs>
                                 <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#00d0ff">
-                                        <animate attributeName="stop-color" values="#00d0ff;#7b61ff;#00f0b5;#00d0ff" dur="7s" repeatCount="indefinite"/>
-                                    </stop>
-                                    <stop offset="50%" stop-color="#7b61ff">
-                                        <animate attributeName="stop-color" values="#7b61ff;#ff4fd8;#00d0ff;#7b61ff" dur="7s" repeatCount="indefinite"/>
-                                    </stop>
-                                    <stop offset="100%" stop-color="#00f0b5">
-                                        <animate attributeName="stop-color" values="#00f0b5;#00d0ff;#ffb347;#00f0b5" dur="7s" repeatCount="indefinite"/>
-                                    </stop>
+                                    <stop offset="0%"   stop-color="#6366f1"/>
+                                    <stop offset="45%"  stop-color="#8b5cf6"/>
+                                    <stop offset="100%" stop-color="#06b6d4"/>
                                 </linearGradient>
                                 <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
                                     <feGaussianBlur stdDeviation="4"/>
@@ -786,90 +780,22 @@
                                     <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
                                 </filter>
                             </defs>
-                            <g transform="translate(210 210)">
-                                <animateTransform attributeName="transform" type="translate" values="210 210;210 204;210 210;210 216;210 210" dur="5s" repeatCount="indefinite"/>
-                                    <path d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
-                                    fill="none"
-                                    stroke="url(#brainGrad)"
-                                    stroke-width="14"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    pathLength="1000"
-                                    stroke-dasharray="1000"
-                                    stroke-dashoffset="1000"
-                                    filter="url(#glow)">
-                                    <animate attributeName="stroke-dashoffset"
-                                        values="1000;0;0;-1000;-1000"
-                                        keyTimes="0;0.147;0.22;0.367;1"
-                                        dur="15.8s"
-                                        repeatCount="indefinite"/>
-                                </path>
-
+                            <g id="brain-float" transform="translate(210 210)">
+                                <path id="bp-outer"
+                                    d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
+                                    fill="none" stroke="url(#brainGrad)" stroke-width="14"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"
+                                    filter="url(#glow)"/>
                                 <g fill="none" stroke="url(#brainGrad)" stroke-width="7" stroke-linecap="round" filter="url(#softGlow)">
-                                    <path d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14"
-                                        pathLength="220" stroke-dasharray="220" stroke-dashoffset="220">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="220;0;0;-220;-220"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M-25 -62 C-56 -72,-84 -63,-96 -40 C-104 -24,-101 -5,-79 8 C-62 17,-53 28,-57 46"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200;-200"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M-26 -22 C-56 -31,-82 -22,-92 -3 C-99 12,-90 28,-68 36 C-49 43,-41 56,-45 77"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200;-200"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M-22 22 C-46 15,-69 21,-79 37 C-88 51,-83 70,-61 81 C-43 90,-35 101,-36 116"
-                                        pathLength="170" stroke-dasharray="170" stroke-dashoffset="170">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="170;0;0;-170;-170"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14"
-                                        pathLength="220" stroke-dasharray="220" stroke-dashoffset="220">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="220;0;0;-220;-220"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M25 -62 C56 -72,84 -63,96 -40 C104 -24,101 -5,79 8 C62 17,53 28,57 46"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200;-200"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M26 -22 C56 -31,82 -22,92 -3 C99 12,90 28,68 36 C49 43,41 56,45 77"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200;-200"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M22 22 C46 15,69 21,79 37 C88 51,83 70,61 81 C43 90,35 101,36 116"
-                                        pathLength="170" stroke-dasharray="170" stroke-dashoffset="170">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="170;0;0;-170;-170"
-                                            keyTimes="0;0.147;0.22;0.367;1"
-                                            dur="15.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
+                                    <path id="bp-1" d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14" pathLength="220" stroke-dasharray="220" stroke-dashoffset="220"/>
+                                    <path id="bp-2" d="M-25 -62 C-56 -72,-84 -63,-96 -40 C-104 -24,-101 -5,-79 8 C-62 17,-53 28,-57 46" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                    <path id="bp-3" d="M-26 -22 C-56 -31,-82 -22,-92 -3 C-99 12,-90 28,-68 36 C-49 43,-41 56,-45 77" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                    <path id="bp-4" d="M-22 22 C-46 15,-69 21,-79 37 C-88 51,-83 70,-61 81 C-43 90,-35 101,-36 116" pathLength="170" stroke-dasharray="170" stroke-dashoffset="170"/>
+                                    <path id="bp-5" d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14" pathLength="220" stroke-dasharray="220" stroke-dashoffset="220"/>
+                                    <path id="bp-6" d="M25 -62 C56 -72,84 -63,96 -40 C104 -24,101 -5,79 8 C62 17,53 28,57 46" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                    <path id="bp-7" d="M26 -22 C56 -31,82 -22,92 -3 C99 12,90 28,68 36 C49 43,41 56,45 77" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                    <path id="bp-8" d="M22 22 C46 15,69 21,79 37 C88 51,83 70,61 81 C43 90,35 101,36 116" pathLength="170" stroke-dasharray="170" stroke-dashoffset="170"/>
                                 </g>
                             </g>
                         </svg>
@@ -1848,10 +1774,12 @@
         async function signInWithGoogle() {
             try {
                 setAuthLoading(true);
+                setAuthStatus('מתחבר עם Google...');
                 await signInWithPopup(auth, provider);
+                setAuthStatus('');
             } catch (error) {
-                console.error(error);
-                alert('התחברות נכשלה. ודא ש-Google Sign-In פעיל ב-Firebase Authentication.');
+                console.error('Google login error:', error.code, error.message);
+                setAuthStatus(firebaseAuthErrorMessage(error.code), true);
             } finally {
                 setAuthLoading(false);
             }
@@ -1861,7 +1789,7 @@
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             if (!email || !password) {
-                authStatus.textContent = 'נא למלא גם אימייל וגם סיסמה.';
+                setAuthStatus('נא למלא גם אימייל וגם סיסמה.', true);
                 return null;
             }
             return { email, password };
@@ -1875,17 +1803,41 @@
             });
         }
 
+        function firebaseAuthErrorMessage(code) {
+            const map = {
+                'auth/invalid-email':            'כתובת האימייל אינה תקינה.',
+                'auth/user-not-found':           'לא נמצא חשבון עם מייל זה — נסה להירשם.',
+                'auth/wrong-password':           'הסיסמה שגויה — נסה שנית.',
+                'auth/email-already-in-use':     'כתובת האימייל כבר רשומה — נסה להתחבר.',
+                'auth/weak-password':            'הסיסמה חלשה מדי — לפחות 6 תווים.',
+                'auth/too-many-requests':        'יותר מדי ניסיונות — נסה שוב מאוחר יותר.',
+                'auth/operation-not-allowed':    'כניסה עם מייל/סיסמה אינה מופעלת ב-Firebase Console. הכנס ל-Firebase → Authentication → Sign-in method → Email/Password ולחץ Enable.',
+                'auth/network-request-failed':   'בעיית רשת — בדוק את החיבור לאינטרנט.',
+                'auth/invalid-credential':       'הפרטים שגויים — בדוק מייל וסיסמה.',
+                'auth/user-disabled':            'החשבון הושבת.',
+                'auth/popup-closed-by-user':     'החלון נסגר לפני השלמת ההתחברות.',
+                'auth/cancelled-popup-request':  'בקשת ה-Google בוטלה.',
+            };
+            return map[code] || `שגיאה (${code}) — נסה שוב.`;
+        }
+
+        function setAuthStatus(msg, isError = false) {
+            authStatus.textContent = msg;
+            authStatus.style.color = isError ? '#dc2626' : '#6366f1';
+            authStatus.style.fontWeight = isError ? '600' : '400';
+        }
+
         async function signInWithEmailPassword() {
             const credentials = getEmailPasswordValues();
             if (!credentials) return;
-            authStatus.textContent = 'מתחבר...';
+            setAuthStatus('מתחבר...');
             try {
                 setAuthLoading(true);
                 await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-                authStatus.textContent = '';
+                setAuthStatus('');
             } catch (error) {
-                console.error(error);
-                authStatus.textContent = 'התחברות נכשלה. בדוק אימייל/סיסמה ונסה שוב.';
+                console.error('Firebase login error:', error.code, error.message);
+                setAuthStatus(firebaseAuthErrorMessage(error.code), true);
             } finally {
                 setAuthLoading(false);
             }
@@ -1894,14 +1846,14 @@
         async function signUpWithEmailPassword() {
             const credentials = getEmailPasswordValues();
             if (!credentials) return;
-            authStatus.textContent = 'נרשם...';
+            setAuthStatus('נרשם...');
             try {
                 setAuthLoading(true);
                 await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
-                authStatus.textContent = '';
+                setAuthStatus('');
             } catch (error) {
-                console.error(error);
-                authStatus.textContent = 'ההרשמה נכשלה. ודא שהסיסמה כוללת לפחות 6 תווים.';
+                console.error('Firebase signup error:', error.code, error.message);
+                setAuthStatus(firebaseAuthErrorMessage(error.code), true);
             } finally {
                 setAuthLoading(false);
             }
@@ -1969,6 +1921,70 @@
             userEmail.textContent = user.email || 'משתמש מחובר';
             subscribeToChats();
         });
+
+        // ── Brain logo animation ──────────────────────────────────────────
+        (function startBrainAnim() {
+            const DRAW_MS   = 2400;   // זמן ציור
+            const HOLD_MS   = 800;    // החזקה מצויר
+            const ERASE_MS  = 2000;   // זמן מחיקה
+            const PAUSE_MS  = 10000;  // המתנה לפני מחזור הבא
+            const CYCLE_MS  = DRAW_MS + HOLD_MS + ERASE_MS + PAUSE_MS;
+
+            const paths = [
+                { id: 'bp-outer', len: 1000, delayMs: 0 },
+                { id: 'bp-1',     len: 220,  delayMs: 300 },
+                { id: 'bp-2',     len: 200,  delayMs: 350 },
+                { id: 'bp-3',     len: 200,  delayMs: 400 },
+                { id: 'bp-4',     len: 170,  delayMs: 450 },
+                { id: 'bp-5',     len: 220,  delayMs: 300 },
+                { id: 'bp-6',     len: 200,  delayMs: 350 },
+                { id: 'bp-7',     len: 200,  delayMs: 400 },
+                { id: 'bp-8',     len: 170,  delayMs: 450 },
+            ].map(p => ({ ...p, el: document.getElementById(p.id) }))
+             .filter(p => p.el);
+
+            // Gentle float animation on the group
+            const floatEl = document.getElementById('brain-float');
+            let floatStart = null;
+            function floatTick(ts) {
+                if (!floatStart) floatStart = ts;
+                const s = Math.sin(((ts - floatStart) / 4000) * Math.PI * 2);
+                if (floatEl) floatEl.setAttribute('transform', `translate(210 ${210 + s * 6})`);
+                requestAnimationFrame(floatTick);
+            }
+            requestAnimationFrame(floatTick);
+
+            function easeInOut(t) {
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            }
+
+            let animStart = null;
+            function tick(ts) {
+                if (!animStart) animStart = ts;
+
+                paths.forEach(({ el, len, delayMs }) => {
+                    const elapsed = Math.max(0, (ts - animStart) - delayMs);
+                    const t = elapsed % CYCLE_MS;
+                    let offset;
+
+                    if (t < DRAW_MS) {
+                        offset = len * (1 - easeInOut(t / DRAW_MS));
+                    } else if (t < DRAW_MS + HOLD_MS) {
+                        offset = 0;
+                    } else if (t < DRAW_MS + HOLD_MS + ERASE_MS) {
+                        offset = -len * easeInOut((t - DRAW_MS - HOLD_MS) / ERASE_MS);
+                    } else {
+                        offset = -len;
+                    }
+
+                    el.setAttribute('stroke-dashoffset', offset.toFixed(2));
+                });
+
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        })();
+        // ─────────────────────────────────────────────────────────────────
 
         window.toggleMenu = toggleMenu;
         window.switchChat = switchChat;
