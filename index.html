@@ -472,6 +472,17 @@
             40% { opacity: 1; transform: translateY(-2px); }
         }
 
+        /* ── Fixed menu + mobile nav ── */
+        #top-menu {
+            position: fixed;
+            width: 272px;
+            z-index: 50;
+        }
+        #mobile-header {
+            display: none;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 1024px) {
             .app-shell {
                 flex-direction: column;
@@ -484,7 +495,7 @@
                 width: 100%;
                 max-width: none;
                 min-width: 0;
-                max-height: 180px;
+                max-height: 240px;
             }
 
             .chat-workspace {
@@ -547,6 +558,10 @@
 
             .history-panel {
                 display: none;
+            }
+
+            #mobile-header {
+                display: flex;
             }
 
             .main-header {
@@ -742,6 +757,53 @@
 
     <div id="app-shell" class="app-shell hidden">
         <aside class="history-panel p-4">
+            <!-- Brand: logo + title + menu button -->
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #e0e7ff;flex-shrink:0;">
+                <div class="brand-logo" aria-hidden="true" style="width:44px;height:44px;min-width:44px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
+                        <defs>
+                            <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%"   stop-color="#6366f1"/>
+                                <stop offset="45%"  stop-color="#8b5cf6"/>
+                                <stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+                                <feGaussianBlur stdDeviation="4"/>
+                                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+                                <feGaussianBlur stdDeviation="2"/>
+                                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                        </defs>
+                        <g id="brain-float" transform="translate(210 210)">
+                            <path id="bp-outer"
+                                d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
+                                fill="none" stroke="url(#brainGrad)" stroke-width="14"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"
+                                filter="url(#glow)"/>
+                            <g fill="none" stroke="url(#brainGrad)" stroke-width="7" stroke-linecap="round" filter="url(#softGlow)">
+                                <path id="bp-1" d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14" pathLength="220" stroke-dasharray="220" stroke-dashoffset="220"/>
+                                <path id="bp-2" d="M-25 -62 C-56 -72,-84 -63,-96 -40 C-104 -24,-101 -5,-79 8 C-62 17,-53 28,-57 46" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                <path id="bp-3" d="M-26 -22 C-56 -31,-82 -22,-92 -3 C-99 12,-90 28,-68 36 C-49 43,-41 56,-45 77" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                <path id="bp-4" d="M-22 22 C-46 15,-69 21,-79 37 C-88 51,-83 70,-61 81 C-43 90,-35 101,-36 116" pathLength="170" stroke-dasharray="170" stroke-dashoffset="170"/>
+                                <path id="bp-5" d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14" pathLength="220" stroke-dasharray="220" stroke-dashoffset="220"/>
+                                <path id="bp-6" d="M25 -62 C56 -72,84 -63,96 -40 C104 -24,101 -5,79 8 C62 17,53 28,57 46" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                <path id="bp-7" d="M26 -22 C56 -31,82 -22,92 -3 C99 12,90 28,68 36 C49 43,41 56,45 77" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
+                                <path id="bp-8" d="M22 22 C46 15,69 21,79 37 C88 51,83 70,61 81 C43 90,35 101,36 116" pathLength="170" stroke-dasharray="170" stroke-dashoffset="170"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div class="menu-title" style="font-size:0.95rem;font-weight:700;white-space:nowrap;letter-spacing:-0.01em;">יזם אתרים</div>
+                    <div style="font-size:10px;color:#94a3b8;white-space:nowrap;">AI לבניית אתרים</div>
+                </div>
+                <button onclick="toggleMenu(event)" class="menu-btn" style="padding:7px 10px;flex-shrink:0;" title="תפריט">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
             <button onclick="createNewChat()" class="w-full text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 transition-opacity" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 4px 14px rgba(79,70,229,0.3);" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                 <i class="fa-solid fa-plus"></i>
                 <span>צ'אט חדש</span>
@@ -761,87 +823,18 @@
         </aside>
 
         <div class="chat-workspace">
-            <header class="main-header bg-white/95 backdrop-blur border border-indigo-100 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4" style="box-shadow:0 4px 20px rgba(99,102,241,0.08),0 1px 4px rgba(15,23,42,0.04);">
-                <div class="flex items-center gap-3">
-                    <div class="brand-logo" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
-                            <defs>
-                                <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%"   stop-color="#6366f1"/>
-                                    <stop offset="45%"  stop-color="#8b5cf6"/>
-                                    <stop offset="100%" stop-color="#06b6d4"/>
-                                </linearGradient>
-                                <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-                                    <feGaussianBlur stdDeviation="4"/>
-                                    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-                                </filter>
-                                <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
-                                    <feGaussianBlur stdDeviation="2"/>
-                                    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-                                </filter>
-                            </defs>
-                            <g id="brain-float" transform="translate(210 210)">
-                                <path id="bp-outer"
-                                    d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
-                                    fill="none" stroke="url(#brainGrad)" stroke-width="14"
-                                    stroke-linecap="round" stroke-linejoin="round"
-                                    pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"
-                                    filter="url(#glow)"/>
-                                <g fill="none" stroke="url(#brainGrad)" stroke-width="7" stroke-linecap="round" filter="url(#softGlow)">
-                                    <path id="bp-1" d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14" pathLength="220" stroke-dasharray="220" stroke-dashoffset="220"/>
-                                    <path id="bp-2" d="M-25 -62 C-56 -72,-84 -63,-96 -40 C-104 -24,-101 -5,-79 8 C-62 17,-53 28,-57 46" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
-                                    <path id="bp-3" d="M-26 -22 C-56 -31,-82 -22,-92 -3 C-99 12,-90 28,-68 36 C-49 43,-41 56,-45 77" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
-                                    <path id="bp-4" d="M-22 22 C-46 15,-69 21,-79 37 C-88 51,-83 70,-61 81 C-43 90,-35 101,-36 116" pathLength="170" stroke-dasharray="170" stroke-dashoffset="170"/>
-                                    <path id="bp-5" d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14" pathLength="220" stroke-dasharray="220" stroke-dashoffset="220"/>
-                                    <path id="bp-6" d="M25 -62 C56 -72,84 -63,96 -40 C104 -24,101 -5,79 8 C62 17,53 28,57 46" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
-                                    <path id="bp-7" d="M26 -22 C56 -31,82 -22,92 -3 C99 12,90 28,68 36 C49 43,41 56,45 77" pathLength="200" stroke-dasharray="200" stroke-dashoffset="200"/>
-                                    <path id="bp-8" d="M22 22 C46 15,69 21,79 37 C88 51,83 70,61 81 C43 90,35 101,36 116" pathLength="170" stroke-dasharray="170" stroke-dashoffset="170"/>
-                                </g>
-                            </g>
-                        </svg>
+            <!-- Mobile-only header (hidden on desktop) -->
+            <div id="mobile-header" style="background:rgba(255,255,255,0.95);backdrop-filter:blur(14px);border:1px solid #e0e7ff;border-radius:16px;padding:10px 14px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 12px rgba(99,102,241,0.08);">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(99,102,241,0.2);overflow:hidden;padding:2px;flex-shrink:0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" style="width:100%;height:100%;"><defs><linearGradient id="mGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="50%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><g transform="translate(210 210)"><path d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z" fill="none" stroke="url(#mGrad)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><g fill="none" stroke="url(#mGrad)" stroke-width="7" stroke-linecap="round"><path d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14"/><path d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14"/></g></g></svg>
                     </div>
-                    <div>
-                        <h1 class="menu-title text-xl sm:text-2xl font-bold text-slate-900" style="letter-spacing:-0.01em;">יזם אתרים</h1>
-                        <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">בינה מלאכותית לבניית אתרים</p>
-                    </div>
+                    <span class="menu-title" style="font-size:1rem;font-weight:700;">יזם אתרים</span>
                 </div>
-                <div class="relative header-actions">
-                    <button onclick="toggleMenu()" class="menu-btn flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-bars"></i>
-                        <span>תפריט</span>
-                    </button>
-                    <section id="top-menu" class="drawer hidden-panel absolute left-0 top-14 w-72 bg-white border border-slate-200 rounded-2xl p-4 shadow-lg z-20">
-                        <h2 class="font-semibold text-slate-900 mb-3">אפשרויות</h2>
-                        <div id="user-chip" class="hidden user-menu-chip mb-2">
-                            <i class="fa-regular fa-user"></i>
-                            <span id="user-email"></span>
-                        </div>
-                        <div class="space-y-2 text-sm">
-                            <button onclick="createNewChat()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
-                                <i class="fa-solid fa-plus ml-2 text-indigo-600"></i> צ'אט חדש
-                            </button>
-                            <button onclick="openHtmlFilesPanel()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
-                                <i class="fa-solid fa-folder-open ml-2 text-indigo-600"></i> קבצי HTML
-                            </button>
-                            <button onclick="openSettings()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
-                                <i class="fa-solid fa-gear ml-2 text-indigo-500"></i> הגדרות
-                            </button>
-                            <button onclick="openContact()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
-                                <i class="fa-solid fa-envelope ml-2 text-indigo-500"></i> יצירת קשר (מייל)
-                            </button>
-                            <button onclick="openPremium()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
-                                <i class="fa-solid fa-crown ml-2 text-amber-500"></i> מנוי פרימיום (בקרוב)
-                            </button>
-                            <button onclick="clearChat()" class="w-full text-right bg-red-50 hover:bg-red-100 border border-red-100 text-red-700 rounded-xl p-3">
-                                <i class="fa-solid fa-trash ml-2"></i> נקה שיחה נוכחית
-                            </button>
-                            <button id="logout-btn" class="w-full text-right bg-slate-900 hover:bg-slate-800 text-white rounded-xl p-3 hidden">
-                                <i class="fa-solid fa-right-from-bracket ml-2"></i> התנתק
-                            </button>
-                        </div>
-                    </section>
-                </div>
-            </header>
+                <button onclick="toggleMenu(event)" class="menu-btn" style="padding:8px 12px;font-size:13px;">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
 
             <main id="chat-messages" class="chat-container p-4 sm:p-6 overflow-y-auto flex flex-col gap-5 mt-3 bg-white/95 border border-indigo-100/60 rounded-2xl" style="box-shadow:0 4px 20px rgba(99,102,241,0.07);"></main>
 
@@ -869,6 +862,38 @@
         </div>
     </div>
 
+    <!-- Main menu (position:fixed, positioned via JS) -->
+    <section id="top-menu" class="drawer hidden-panel bg-white border border-slate-200 rounded-2xl p-4 shadow-xl" onclick="event.stopPropagation()">
+        <h2 class="font-semibold text-slate-900 mb-3">אפשרויות</h2>
+        <div id="user-chip" class="hidden user-menu-chip mb-2">
+            <i class="fa-regular fa-user"></i>
+            <span id="user-email"></span>
+        </div>
+        <div class="space-y-2 text-sm">
+            <button onclick="createNewChat()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
+                <i class="fa-solid fa-plus ml-2 text-indigo-600"></i> צ'אט חדש
+            </button>
+            <button onclick="openHtmlFilesPanel()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
+                <i class="fa-solid fa-folder-open ml-2 text-indigo-600"></i> קבצי HTML
+            </button>
+            <button onclick="openSettings()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
+                <i class="fa-solid fa-gear ml-2 text-indigo-500"></i> הגדרות
+            </button>
+            <button onclick="openContact()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
+                <i class="fa-solid fa-envelope ml-2 text-indigo-500"></i> יצירת קשר (מייל)
+            </button>
+            <button onclick="openPremium()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
+                <i class="fa-solid fa-crown ml-2 text-amber-500"></i> מנוי פרימיום (בקרוב)
+            </button>
+            <button onclick="clearChat()" class="w-full text-right bg-red-50 hover:bg-red-100 border border-red-100 text-red-700 rounded-xl p-3">
+                <i class="fa-solid fa-trash ml-2"></i> נקה שיחה נוכחית
+            </button>
+            <button id="logout-btn" class="w-full text-right bg-slate-900 hover:bg-slate-800 text-white rounded-xl p-3 hidden">
+                <i class="fa-solid fa-right-from-bracket ml-2"></i> התנתק
+            </button>
+        </div>
+    </section>
+
     <div id="html-files-modal" class="hidden fixed inset-0 bg-slate-900/40 z-40 items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-4 w-full max-w-2xl border border-slate-200">
             <div class="flex items-center justify-between">
@@ -878,6 +903,35 @@
             <div id="html-files-list" class="mt-3 max-h-[60vh] overflow-auto space-y-2"></div>
         </div>
     </div>
+    <!-- Share modal -->
+    <div id="share-modal" style="position:fixed;inset:0;z-index:65;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;padding:16px;" onclick="closeShareModal(event)">
+        <div style="background:#fff;border-radius:24px;width:min(92vw,400px);padding:24px;box-shadow:0 20px 50px rgba(15,23,42,0.2);border:1px solid #e0e7ff;" onclick="event.stopPropagation()">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <h3 style="font-size:1.1rem;font-weight:700;color:#1e1b4b;margin:0;"><i class="fa-solid fa-share-nodes" style="color:#6366f1;margin-left:8px;"></i>שתף שיחה</h3>
+                <button onclick="closeShareModal()" style="border:none;background:#f1f5f9;border-radius:999px;width:32px;height:32px;cursor:pointer;color:#64748b;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+            <div id="share-chat-title" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:10px 14px;font-size:13px;color:#4f46e5;font-weight:600;margin-bottom:16px;"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button id="share-native-btn" onclick="shareNative()" style="display:none;border:none;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;">
+                    <i class="fa-solid fa-share-nodes" style="margin-left:10px;"></i>שתף עם האפליקציה
+                </button>
+                <button onclick="shareGmail()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#a5b4fc'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
+                    <i class="fa-brands fa-google" style="color:#ea4335;font-size:18px;"></i><span>שלח ב-Gmail</span>
+                </button>
+                <button onclick="shareWhatsApp()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#86efac'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
+                    <i class="fa-brands fa-whatsapp" style="color:#25d366;font-size:18px;"></i><span>שלח ב-WhatsApp</span>
+                </button>
+                <button onclick="shareClipboard()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
+                    <i class="fa-solid fa-clipboard" style="color:#3b82f6;font-size:18px;"></i><span>העתק טקסט לגזור-הדבק</span>
+                </button>
+                <button onclick="shareDownload()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#fafafa';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
+                    <i class="fa-solid fa-file-arrow-down" style="color:#64748b;font-size:18px;"></i><span>הורד קובץ HTML מעוצב</span>
+                </button>
+            </div>
+            <p id="share-status" style="text-align:center;font-size:12px;color:#10b981;min-height:18px;margin-top:12px;font-weight:600;"></p>
+        </div>
+    </div>
+
     <div id="settings-modal" class="settings-modal-overlay" onclick="closeSettingsModal(event)">
         <div class="settings-modal-card" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between gap-2 mb-3">
@@ -993,7 +1047,18 @@
         const qrBannerLink = document.getElementById('qr-banner-link');
         const settingsModal = document.getElementById('settings-modal');
         const settingsStatus = document.getElementById('settings-status');
-        function toggleMenu() {
+        function toggleMenu(event) {
+            event?.stopPropagation();
+            const isHidden = topMenu.classList.contains('hidden-panel');
+            if (isHidden) {
+                const btn = event.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const menuW = 272;
+                let left = rect.right - menuW;
+                if (left < 8) left = 8;
+                topMenu.style.top  = (rect.bottom + 8) + 'px';
+                topMenu.style.left = left + 'px';
+            }
             topMenu.classList.toggle('hidden-panel');
         }
 
@@ -1157,6 +1222,28 @@
                 }
                 chatMessages.appendChild(messageDiv);
             });
+
+            // אם הצ'אט עדיין בהמתנה לתשובה — מציג מחוון "חושב"
+            if ((pendingByChat.get(activeChatId) || 0) > 0) {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'flex justify-start';
+                typingDiv.innerHTML = `
+                    <div class="flex gap-3 items-start">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-white text-sm mt-1">י</div>
+                        <div class="bg-slate-100 border border-slate-200 rounded-2xl px-5 py-3 flex items-center gap-2">
+                            <div class="flex space-x-1">
+                                <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay:150ms"></div>
+                                <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay:300ms"></div>
+                            </div>
+                            <span class="text-slate-500 text-sm">יזם חושב...</span>
+                        </div>
+                    </div>`;
+                chatMessages.appendChild(typingDiv);
+            }
+
+            // גלילה לתחתית
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function formatMessage(content) {
@@ -1473,52 +1560,213 @@
             alert('מנוי פרימיום יושק בהמשך: שמירת ענן, תבניות מתקדמות וחיבורים נוספים.');
         }
 
-        function exportChatHtml() {
-            const currentChat = getCurrentChat();
-            if (!currentChat) return '';
-            const rows = currentChat.messages.map(msg => `
-                <article style="margin:12px 0;padding:14px;border-radius:12px;border:1px solid #e2e8f0;background:${msg.role === 'user' ? '#dbeafe' : '#fff'}">
-                    <h4 style="margin:0 0 8px 0;font-family:Arial">${msg.role === 'user' ? 'משתמש' : 'עוזר'}</h4>
-                    <div style="white-space:pre-wrap;font-family:Arial">${escapeHtml(msg.content)}</div>
-                </article>
-            `).join('');
+        function exportChatHtml(chat) {
+            chat = chat || getCurrentChat();
+            if (!chat) return '';
 
-            return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>${escapeHtml(currentChat.title)}</title></head><body style="font-family:Arial;background:#f8fafc;padding:20px"><h2>ייצוא צ'אט: ${escapeHtml(currentChat.title)}</h2>${rows}</body></html>`;
+            const rows = chat.messages.map(msg => {
+                const isUser = msg.role === 'user';
+                const codeBlocks = [];
+                let textContent = msg.content.replace(/```(?:html)?\n([\s\S]*?)```/g, (_, code) => {
+                    codeBlocks.push(code.trim());
+                    return `\n📄 [קוד HTML מצורף למטה]\n`;
+                });
+
+                let blockHtml = `<article style="margin:14px 0;padding:18px 22px;border-radius:16px;border:1px solid ${isUser ? '#c7d2fe' : '#e2e8f0'};background:${isUser ? 'linear-gradient(135deg,#eff6ff,#eef2ff)' : '#ffffff'};">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <div style="width:30px;height:30px;border-radius:10px;background:${isUser ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'linear-gradient(135deg,#8b5cf6,#06b6d4)'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;">${isUser ? 'א' : 'י'}</div>
+                        <strong style="font-family:Arial,sans-serif;color:${isUser ? '#312e81' : '#1e293b'};font-size:14px;">${isUser ? 'אתה' : 'יזם אתרים'}</strong>
+                    </div>
+                    <div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.75;color:#334155;">${escapeHtml(textContent.trim())}</div>`;
+
+                codeBlocks.forEach((code, i) => {
+                    blockHtml += `<div style="margin-top:14px;border-radius:12px;overflow:hidden;border:1px solid #c7d2fe;">
+                        <div style="background:linear-gradient(120deg,#eff6ff,#eef2ff);padding:8px 14px;font-size:11px;color:#3730a3;font-family:Arial,sans-serif;font-weight:700;">📄 קוד HTML${codeBlocks.length > 1 ? ' ' + (i+1) : ''}</div>
+                        <pre style="margin:0;padding:14px;background:#f8fafc;font-size:12px;direction:ltr;text-align:left;overflow-x:auto;line-height:1.55;color:#1e293b;">${escapeHtml(code)}</pre>
+                    </div>`;
+                });
+
+                blockHtml += `</article>`;
+                return blockHtml;
+            }).join('');
+
+            return `<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>יזם אתרים | ${escapeHtml(chat.title)}</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f8fafc;margin:0;padding:0;direction:rtl;}
+        pre{white-space:pre-wrap;word-break:break-word;}
+    </style>
+</head>
+<body>
+    <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed 50%,#06b6d4);padding:28px 32px;color:#fff;">
+        <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;">⚡</div>
+            <div>
+                <div style="font-size:1.4rem;font-weight:800;margin-bottom:2px;">יזם אתרים</div>
+                <div style="opacity:0.85;font-size:13px;">${escapeHtml(chat.title)} &bull; ${new Date().toLocaleDateString('he-IL')}</div>
+            </div>
+        </div>
+    </div>
+    <div style="max-width:820px;margin:0 auto;padding:24px 20px;">
+        ${rows}
+    </div>
+    <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-family:Arial,sans-serif;border-top:1px solid #e2e8f0;margin-top:20px;">נוצר עם <strong>יזם אתרים</strong> &bull; AI לבניית אתרים</div>
+</body>
+</html>`;
         }
 
-        async function shareChat(preferredChannel = null) {
-            const currentChat = getCurrentChat();
-            if (!currentChat || !currentChat.messages.length) {
+        function buildPlainTextExport(chat) {
+            const lines = [];
+            lines.push(`⚡ יזם אתרים — שיחה: ${chat.title}`);
+            lines.push('━'.repeat(48));
+            lines.push('');
+            chat.messages.forEach(msg => {
+                const isUser = msg.role === 'user';
+                lines.push(isUser ? '👤 אתה:' : '🤖 יזם אתרים:');
+                let text = msg.content;
+                let codeIdx = 0;
+                text = text.replace(/```(?:html)?\n([\s\S]*?)```/g, () => {
+                    codeIdx++;
+                    return `\n  [ קוד HTML #${codeIdx} — ראה בקובץ המצורף ]\n`;
+                });
+                lines.push(text.trim());
+                lines.push('');
+            });
+            lines.push('━'.repeat(48));
+            lines.push('נשלח מיזם אתרים • AI לבניית אתרים בשניות');
+            return lines.join('\n');
+        }
+
+        let _shareChatRef = null;
+
+        function shareChat() {
+            const chat = getCurrentChat();
+            if (!chat || !chat.messages.length) {
                 alert('אין תוכן לשיתוף כרגע.');
                 return;
             }
-
-            const htmlContent = exportChatHtml();
-            const file = new File([htmlContent], `chat-export-${Date.now()}.html`, { type: 'text/html' });
-
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'שיתוף צ׳אט',
-                    text: 'מצורף קובץ HTML של הצ׳אט.',
-                    files: [file]
-                });
-                return;
-            }
-
-            const url = URL.createObjectURL(file);
-            if (preferredChannel === 'whatsapp') {
-                window.open(`https://wa.me/?text=${encodeURIComponent('מצורף סיכום צ׳אט. הורד/י את הקובץ מהדפדפן: ' + url)}`, '_blank');
-            } else {
-                const subject = encodeURIComponent('ייצוא צ׳אט HTML');
-                const body = encodeURIComponent('היי, מצורף לינק לקובץ הצ׳אט (זמני): ' + url);
-                window.open(`https://mail.google.com/mail/?view=cm&fs=1&tf=1&su=${subject}&body=${body}`, '_blank');
-            }
-
-            const dl = document.createElement('a');
-            dl.href = url;
-            dl.download = file.name;
-            dl.click();
+            openShareModal(chat);
         }
+
+        function openShareModal(chat) {
+            _shareChatRef = chat;
+            const titleEl = document.getElementById('share-chat-title');
+            if (titleEl) titleEl.textContent = '💬 ' + chat.title;
+            const statusEl = document.getElementById('share-status');
+            if (statusEl) statusEl.textContent = '';
+            // הצג כפתור "שתף עם אפליקציה" רק אם הדפדפן תומך
+            const nativeBtn = document.getElementById('share-native-btn');
+            if (nativeBtn) nativeBtn.style.display = navigator.share ? 'block' : 'none';
+            document.getElementById('share-modal').style.display = 'flex';
+        }
+
+        function closeShareModal(event) {
+            if (event && event.target !== document.getElementById('share-modal')) return;
+            document.getElementById('share-modal').style.display = 'none';
+        }
+
+        window.closeShareModal = function(ev) {
+            if (ev && ev.target !== document.getElementById('share-modal')) return;
+            document.getElementById('share-modal').style.display = 'none';
+        };
+
+        window.shareNative = async function() {
+            const chat = _shareChatRef;
+            if (!chat) return;
+            const html = exportChatHtml(chat);
+            const file = new File([html], `יזם-אתרים-${Date.now()}.html`, { type: 'text/html' });
+            try {
+                await navigator.share({ title: 'יזם אתרים | ' + chat.title, files: [file] });
+            } catch(e) { console.error(e); }
+        };
+
+        window.shareGmail = function() {
+            const chat = _shareChatRef;
+            if (!chat) return;
+            const s = document.getElementById('share-status');
+
+            // שלב 1: הורדת הקובץ מיד
+            window.shareDownload();
+
+            // שלב 2: בונים גוף קצר (ללא קוד) כדי לא לחרוג מגבולות URL
+            const lines = [];
+            lines.push(`⚡ יזם אתרים — ${chat.title}`);
+            lines.push('━'.repeat(40));
+            lines.push('');
+            lines.push('📎 הקובץ המלא (HTML) הורד אוטומטית לתיקיית ההורדות — יש לצרפו למייל.');
+            lines.push('');
+            lines.push('תוכן השיחה (טקסט):');
+            lines.push('');
+
+            let bodyLen = lines.join('\n').length;
+            for (const msg of chat.messages) {
+                const isUser = msg.role === 'user';
+                const label = isUser ? '👤 אתה:' : '🤖 יזם אתרים:';
+                // הסרת קוד HTML מהטקסט
+                let text = msg.content.replace(/```(?:html)?\n[\s\S]*?```/g, '[קוד HTML בקובץ המצורף]').trim();
+                // קיצור אם ארוך מדי
+                if (text.length > 300) text = text.slice(0, 300) + '…';
+                const block = `${label}\n${text}\n`;
+                if (bodyLen + block.length > 1800) {
+                    lines.push('… (שאר השיחה בקובץ המצורף)');
+                    break;
+                }
+                lines.push(block);
+                bodyLen += block.length;
+            }
+
+            lines.push('━'.repeat(40));
+            lines.push('נשלח מיזם אתרים • AI לבניית אתרים');
+
+            const subject = encodeURIComponent('⚡ יזם אתרים — ' + chat.title);
+            const body = encodeURIComponent(lines.join('\n'));
+
+            // שלב 3: פתיחת Gmail אחרי 600ms (כדי לתת לדפדפן להתחיל הורדה)
+            setTimeout(() => {
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
+            }, 600);
+
+            if (s) s.textContent = '✓ הקובץ מורד — Gmail ייפתח בעוד שנייה';
+        };
+
+        window.shareWhatsApp = function() {
+            const chat = _shareChatRef;
+            if (!chat) return;
+            const text = buildPlainTextExport(chat);
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            const s = document.getElementById('share-status');
+            if (s) s.textContent = '✓ WhatsApp נפתח';
+        };
+
+        window.shareClipboard = function() {
+            const chat = _shareChatRef;
+            if (!chat) return;
+            const text = buildPlainTextExport(chat);
+            navigator.clipboard.writeText(text).then(() => {
+                const s = document.getElementById('share-status');
+                if (s) s.textContent = '✓ הטקסט הועתק ללוח';
+            });
+        };
+
+        window.shareDownload = function() {
+            const chat = _shareChatRef;
+            if (!chat) return;
+            const html = exportChatHtml(chat);
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `יזם-אתרים-${chat.title.slice(0,20).replace(/\s+/g,'_')}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+            const s = document.getElementById('share-status');
+            if (s) s.textContent = '✓ הקובץ מורד';
+        };
 
         function collectHtmlExports() {
             const exports = [];
@@ -1591,11 +1839,10 @@
             URL.revokeObjectURL(url);
         }
 
-        async function shareSpecificChat(chatId) {
-            const originalActive = activeChatId;
-            activeChatId = chatId;
-            await shareChat('gmail');
-            activeChatId = originalActive;
+        function shareSpecificChat(chatId) {
+            const chat = chats.find(c => c.id === chatId);
+            if (!chat) return;
+            openShareModal(chat);
             openMenuChatId = null;
             renderChatList();
         }
@@ -1774,12 +2021,10 @@
         async function signInWithGoogle() {
             try {
                 setAuthLoading(true);
-                setAuthStatus('מתחבר עם Google...');
                 await signInWithPopup(auth, provider);
-                setAuthStatus('');
             } catch (error) {
-                console.error('Google login error:', error.code, error.message);
-                setAuthStatus(firebaseAuthErrorMessage(error.code), true);
+                console.error(error);
+                alert('התחברות נכשלה. ודא ש-Google Sign-In פעיל ב-Firebase Authentication.');
             } finally {
                 setAuthLoading(false);
             }
@@ -1789,7 +2034,7 @@
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             if (!email || !password) {
-                setAuthStatus('נא למלא גם אימייל וגם סיסמה.', true);
+                authStatus.textContent = 'נא למלא גם אימייל וגם סיסמה.';
                 return null;
             }
             return { email, password };
@@ -1803,41 +2048,17 @@
             });
         }
 
-        function firebaseAuthErrorMessage(code) {
-            const map = {
-                'auth/invalid-email':            'כתובת האימייל אינה תקינה.',
-                'auth/user-not-found':           'לא נמצא חשבון עם מייל זה — נסה להירשם.',
-                'auth/wrong-password':           'הסיסמה שגויה — נסה שנית.',
-                'auth/email-already-in-use':     'כתובת האימייל כבר רשומה — נסה להתחבר.',
-                'auth/weak-password':            'הסיסמה חלשה מדי — לפחות 6 תווים.',
-                'auth/too-many-requests':        'יותר מדי ניסיונות — נסה שוב מאוחר יותר.',
-                'auth/operation-not-allowed':    'כניסה עם מייל/סיסמה אינה מופעלת ב-Firebase Console. הכנס ל-Firebase → Authentication → Sign-in method → Email/Password ולחץ Enable.',
-                'auth/network-request-failed':   'בעיית רשת — בדוק את החיבור לאינטרנט.',
-                'auth/invalid-credential':       'הפרטים שגויים — בדוק מייל וסיסמה.',
-                'auth/user-disabled':            'החשבון הושבת.',
-                'auth/popup-closed-by-user':     'החלון נסגר לפני השלמת ההתחברות.',
-                'auth/cancelled-popup-request':  'בקשת ה-Google בוטלה.',
-            };
-            return map[code] || `שגיאה (${code}) — נסה שוב.`;
-        }
-
-        function setAuthStatus(msg, isError = false) {
-            authStatus.textContent = msg;
-            authStatus.style.color = isError ? '#dc2626' : '#6366f1';
-            authStatus.style.fontWeight = isError ? '600' : '400';
-        }
-
         async function signInWithEmailPassword() {
             const credentials = getEmailPasswordValues();
             if (!credentials) return;
-            setAuthStatus('מתחבר...');
+            authStatus.textContent = 'מתחבר...';
             try {
                 setAuthLoading(true);
                 await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-                setAuthStatus('');
+                authStatus.textContent = '';
             } catch (error) {
-                console.error('Firebase login error:', error.code, error.message);
-                setAuthStatus(firebaseAuthErrorMessage(error.code), true);
+                console.error(error);
+                authStatus.textContent = 'התחברות נכשלה. בדוק אימייל/סיסמה או נסה שוב.';
             } finally {
                 setAuthLoading(false);
             }
@@ -1846,14 +2067,14 @@
         async function signUpWithEmailPassword() {
             const credentials = getEmailPasswordValues();
             if (!credentials) return;
-            setAuthStatus('נרשם...');
+            authStatus.textContent = 'נרשם...';
             try {
                 setAuthLoading(true);
                 await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
-                setAuthStatus('');
+                authStatus.textContent = '';
             } catch (error) {
-                console.error('Firebase signup error:', error.code, error.message);
-                setAuthStatus(firebaseAuthErrorMessage(error.code), true);
+                console.error(error);
+                authStatus.textContent = 'ההרשמה נכשלה. ודא שהסיסמה מכילה לפחות 6 תווים.';
             } finally {
                 setAuthLoading(false);
             }
@@ -1876,6 +2097,9 @@
             if (openMenuChatId) {
                 openMenuChatId = null;
                 renderChatList();
+            }
+            if (!topMenu.classList.contains('hidden-panel')) {
+                topMenu.classList.add('hidden-panel');
             }
         });
         [emailInput, passwordInput].forEach((field) => {
@@ -1903,7 +2127,7 @@
                 chatList.innerHTML = '';
                 chatsCount.textContent = '0';
                 renderWelcome();
-                authBanner.classList.remove('hidden');
+                authBanner.style.display = 'flex';
                 appShell.classList.add('hidden');
                 document.body.classList.remove('app-active');
                 userChip.classList.add('hidden');
@@ -1913,7 +2137,7 @@
                 return;
             }
 
-            authBanner.classList.add('hidden');
+            authBanner.style.display = 'none';
             appShell.classList.remove('hidden');
             document.body.classList.add('app-active');
             userChip.classList.remove('hidden');
@@ -1925,9 +2149,9 @@
         // ── Brain logo animation ──────────────────────────────────────────
         (function startBrainAnim() {
             const DRAW_MS   = 2400;   // זמן ציור
-            const HOLD_MS   = 800;    // החזקה מצויר
+            const HOLD_MS   = 10000;  // המתנה מצויר לפני מחיקה
             const ERASE_MS  = 2000;   // זמן מחיקה
-            const PAUSE_MS  = 10000;  // המתנה לפני מחזור הבא
+            const PAUSE_MS  = 0;      // אין המתנה — מיד מתחיל לצייר מחדש
             const CYCLE_MS  = DRAW_MS + HOLD_MS + ERASE_MS + PAUSE_MS;
 
             const paths = [
@@ -1998,6 +2222,7 @@
         window.openPremium = openPremium;
         window.shareChat = shareChat;
         window.shareSpecificChat = shareSpecificChat;
+        window.openShareModal = openShareModal;
         window.toggleChatMenu = toggleChatMenu;
         window.deleteChatById = deleteChatById;
         window.triggerFileUpload = triggerFileUpload;
