@@ -55,22 +55,22 @@
         }
 
         .brand-logo {
-            width: 44px;
-            height: 44px;
+            width: 52px;
+            height: 52px;
             border-radius: 14px;
-            background: conic-gradient(from 120deg, #2563eb, #7c3aed, #ec4899, #14b8a6, #2563eb);
+            background: #0f172a;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-weight: 700;
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
-            animation: logoSpin 8s linear infinite;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+            overflow: hidden;
+            padding: 4px;
         }
 
-        @keyframes logoSpin {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
+        .brand-logo svg {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         .chat-workspace {
@@ -398,47 +398,6 @@
         .typing-min span:nth-child(2) { animation-delay: 0.2s; }
         .typing-min span:nth-child(3) { animation-delay: 0.4s; }
 
-        .mic-btn {
-            border: 1px solid #dbeafe;
-            background: linear-gradient(145deg, #ffffff, #eef2ff);
-            color: #4338ca;
-            position: relative;
-        }
-
-        .mic-btn:hover {
-            background: linear-gradient(145deg, #eef2ff, #e0e7ff);
-            border-color: #c7d2fe;
-        }
-
-        .mic-btn.recording {
-            color: #ffffff;
-            border-color: #ef4444;
-            background: linear-gradient(145deg, #ef4444, #dc2626);
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
-            animation: micPulse 1.2s ease-in-out infinite;
-        }
-
-        .mic-btn.recording::after {
-            content: '';
-            position: absolute;
-            inset: -5px;
-            border-radius: 999px;
-            border: 2px solid rgba(239, 68, 68, 0.35);
-        }
-
-        .mic-status {
-            min-height: 18px;
-        }
-
-        @keyframes micPulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
-            }
-            50% {
-                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-            }
-        }
-
         .public-link-box {
             margin: 10px 12px 12px;
             padding: 10px;
@@ -523,12 +482,36 @@
                 width: 100%;
                 max-width: none;
                 min-width: 0;
-                max-height: 230px;
+                max-height: 180px;
+            }
+
+            .chat-workspace {
+                flex: 1;
+                min-height: 0;
             }
 
             .chat-container {
-                height: calc(100vh - 200px);
-                min-height: 340px;
+                height: auto;
+                flex: 1;
+                min-height: 0;
+                margin-top: 8px;
+            }
+
+            .chat-composer {
+                margin: 6px 0 0;
+                padding: 10px;
+                position: sticky;
+                bottom: 0;
+                z-index: 10;
+            }
+
+            #chat-form {
+                gap: 8px;
+            }
+
+            .ghost-btn {
+                padding: 8px 11px;
+                font-size: 12px;
             }
 
             .main-header {
@@ -579,10 +562,10 @@
             }
 
             .brand-logo {
-                width: 36px;
-                height: 36px;
+                width: 40px;
+                height: 40px;
                 border-radius: 12px;
-                font-size: 14px;
+                padding: 3px;
             }
 
             .menu-btn span {
@@ -622,10 +605,10 @@
             #chat-form > button,
             #chat-form > .ghost-btn {
                 flex: 0 0 auto;
-                width: 40px;
-                height: 40px;
-                min-width: 40px;
-                min-height: 40px;
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+                min-height: 36px;
                 padding: 0;
                 border-radius: 999px;
             }
@@ -644,6 +627,10 @@
                 display: none;
             }
 
+            .welcome-panel {
+                display: none;
+            }
+
             #top-menu {
                 width: min(94vw, 340px);
                 left: 0;
@@ -655,7 +642,7 @@
             .action-btn,
             .chat-item-menu button,
             #top-menu button {
-                font-size: 13px;
+                font-size: 12px;
             }
         }
     </style>
@@ -710,10 +697,33 @@
         <div class="chat-workspace">
             <header class="main-header bg-white/90 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="brand-logo">י</div>
+                    <div class="brand-logo" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
+                            <defs>
+                                <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00d0ff">
+                                        <animate attributeName="stop-color" values="#00d0ff;#7b61ff;#00f0b5;#00d0ff" dur="7s" repeatCount="indefinite"/>
+                                    </stop>
+                                    <stop offset="50%" stop-color="#7b61ff">
+                                        <animate attributeName="stop-color" values="#7b61ff;#ff4fd8;#00d0ff;#7b61ff" dur="7s" repeatCount="indefinite"/>
+                                    </stop>
+                                    <stop offset="100%" stop-color="#00f0b5">
+                                        <animate attributeName="stop-color" values="#00f0b5;#00d0ff;#ffb347;#00f0b5" dur="7s" repeatCount="indefinite"/>
+                                    </stop>
+                                </linearGradient>
+                                <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+                                    <feGaussianBlur stdDeviation="4"/>
+                                    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+                                </filter>
+                            </defs>
+                            <g transform="translate(210 210)">
+                                <animateTransform attributeName="transform" type="translate" values="210 210;210 204;210 210;210 216;210 210" dur="5s" repeatCount="indefinite"/>
+                                <path d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z" fill="none" stroke="url(#brainGrad)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+                            </g>
+                        </svg>
+                    </div>
                     <div>
                         <h1 class="menu-title text-xl sm:text-2xl font-semibold text-slate-900">בונה אתרים עם יזם אתרים</h1>
-                        <p class="text-slate-500 text-sm">שיחות ממשיכות לרוץ ברקע גם כשעוברים לצ׳אט אחר</p>
                     </div>
                 </div>
                 <div class="relative header-actions">
@@ -766,9 +776,6 @@
                            type="text"
                            class="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-full px-6 py-4 outline-none text-base text-slate-900"
                            placeholder="תאר את האתר שתרצה לבנות או לשפר...">
-                    <button id="mic-btn" type="button" class="mic-btn w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-md shadow-indigo-100" title="הקלטה קולית">
-                        <i class="fa-solid fa-microphone text-xl"></i>
-                    </button>
                     <button type="button" onclick="shareChat()" class="bg-emerald-500 hover:bg-emerald-600 w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-md shadow-emerald-200" title="שתף צ'אט">
                         <i class="fa-solid fa-share-nodes text-white text-xl"></i>
                     </button>
@@ -776,7 +783,6 @@
                         <i class="fa-solid fa-paper-plane text-white text-xl"></i>
                     </button>
                 </form>
-                <p id="mic-status" class="mic-status mt-2 text-xs text-slate-500"></p>
                 <div id="upload-preview" class="mt-2"></div>
             </div>
         </div>
@@ -894,8 +900,6 @@
         const chatMessages = document.getElementById('chat-messages');
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
-        const micButton = document.getElementById('mic-btn');
-        const micStatus = document.getElementById('mic-status');
         const topMenu = document.getElementById('top-menu');
         const chatList = document.getElementById('chat-list');
         const chatsCount = document.getElementById('chats-count');
@@ -908,108 +912,6 @@
         const qrBannerLink = document.getElementById('qr-banner-link');
         const settingsModal = document.getElementById('settings-modal');
         const settingsStatus = document.getElementById('settings-status');
-        const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-        let isRecording = false;
-        let speechFinalText = '';
-        let speechInterimText = '';
-
-        function updateSpeechInput() {
-            const mergedText = [speechFinalText, speechInterimText].filter(Boolean).join(' ').trim();
-            if (mergedText) {
-                input.value = mergedText;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
-        function setMicState(recording) {
-            isRecording = recording;
-            micButton?.classList.toggle('recording', recording);
-            micButton?.setAttribute('aria-pressed', recording ? 'true' : 'false');
-            if (recording) {
-                micButton.title = 'עצור הקלטה';
-                micStatus.textContent = 'מקליט... אפשר לדבר בעברית.';
-            } else {
-                micButton.title = 'הקלטה קולית';
-                if (!micStatus.textContent.includes('לא נתמך')) {
-                    micStatus.textContent = speechFinalText ? 'ההקלטה הסתיימה. אפשר לערוך או לשלוח.' : '';
-                }
-            }
-        }
-
-        function stopSpeechRecognition() {
-            if (!recognition || !isRecording) return;
-            recognition.stop();
-        }
-
-        function startSpeechRecognition() {
-            if (!SpeechRecognitionClass) {
-                micStatus.textContent = 'הדפדפן לא תומך בהקלדה קולית. מומלץ להשתמש ב-Chrome מעודכן.';
-                return;
-            }
-
-            speechFinalText = input.value.trim();
-            speechInterimText = '';
-
-            if (!recognition) {
-                recognition = new SpeechRecognitionClass();
-                recognition.lang = 'he-IL';
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                recognition.maxAlternatives = 1;
-
-                recognition.onresult = (event) => {
-                    let finalChunk = '';
-                    let interimChunk = '';
-                    for (let i = event.resultIndex; i < event.results.length; i += 1) {
-                        const transcript = event.results[i][0]?.transcript?.trim() || '';
-                        if (!transcript) continue;
-                        if (event.results[i].isFinal) {
-                            finalChunk += `${transcript} `;
-                        } else {
-                            interimChunk += `${transcript} `;
-                        }
-                    }
-                    if (finalChunk) {
-                        speechFinalText = [speechFinalText, finalChunk.trim()].filter(Boolean).join(' ').trim();
-                    }
-                    speechInterimText = interimChunk.trim();
-                    updateSpeechInput();
-                };
-
-                recognition.onerror = (event) => {
-                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                        micStatus.textContent = 'אין הרשאת מיקרופון. אשר/י הרשאה כדי להשתמש בהקלטה קולית.';
-                    } else if (event.error === 'no-speech') {
-                        micStatus.textContent = 'לא זוהה דיבור. נסה/י שוב.';
-                    } else if (event.error !== 'aborted') {
-                        micStatus.textContent = `שגיאת זיהוי קול: ${event.error}`;
-                    }
-                };
-
-                recognition.onend = () => {
-                    speechInterimText = '';
-                    updateSpeechInput();
-                    setMicState(false);
-                };
-            }
-
-            try {
-                recognition.start();
-                setMicState(true);
-            } catch (error) {
-                if (!isRecording) {
-                    micStatus.textContent = 'לא ניתן להתחיל הקלטה כרגע. נסה/י שוב.';
-                }
-            }
-        }
-
-        if (!SpeechRecognitionClass) {
-            micButton.disabled = true;
-            micButton.classList.add('opacity-60', 'cursor-not-allowed');
-            micStatus.textContent = 'הקלדה קולית אינה נתמכת בדפדפן הזה.';
-        }
-
         function toggleMenu() {
             topMenu.classList.toggle('hidden-panel');
         }
@@ -1419,7 +1321,7 @@
 
         function renderWelcome() {
             chatMessages.innerHTML = `
-                <div class="text-center text-slate-600 py-12">
+                <div class="welcome-panel text-center text-slate-600 py-12">
                     <div class="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mb-4">✨</div>
                     <h2 class="text-xl sm:text-2xl font-semibold text-slate-900">ברוך הבא! כל הנתונים נשמרים בענן</h2>
                     <p class="welcome-copy mt-2 max-w-2xl mx-auto">השיחות שלך נשמרות ב-Firebase Firestore תחת החשבון האישי שלך. אפשר להתחבר מכל מכשיר ולראות את ההיסטוריה.</p>
@@ -1876,15 +1778,7 @@
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            stopSpeechRecognition();
             sendMessage();
-        });
-        micButton.addEventListener('click', () => {
-            if (isRecording) {
-                stopSpeechRecognition();
-            } else {
-                startSpeechRecognition();
-            }
         });
 
         onAuthStateChanged(auth, (user) => {
