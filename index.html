@@ -26,6 +26,10 @@
             margin: 0;
         }
 
+        body.app-active {
+            overflow: hidden;
+        }
+
         .app-shell {
             max-width: 1700px;
             margin: 0 auto;
@@ -75,10 +79,16 @@
             flex-direction: column;
             min-width: 0;
             min-height: 0;
+            overflow: hidden;
         }
 
         .chat-container {
             height: calc(100vh - 160px);
+            min-height: 0;
+        }
+
+        .chat-composer {
+            flex-shrink: 0;
         }
 
         .message-bubble {
@@ -527,34 +537,111 @@
         }
 
         @media (max-width: 768px) {
+            html, body {
+                height: 100%;
+            }
+
+            body.app-active {
+                position: fixed;
+                inset: 0;
+                width: 100%;
+                overscroll-behavior: none;
+            }
+
             body {
                 background: radial-gradient(circle at top right, #dbeafe 0%, #f8fafc 35%, #e0e7ff 100%);
+            }
+
+            .app-shell {
+                height: 100dvh;
+                max-height: 100dvh;
+                padding: 8px;
+                gap: 8px;
+                overflow: hidden;
             }
 
             .history-panel {
                 display: none;
             }
 
+            .main-header {
+                padding: 10px 12px;
+                border-radius: 16px;
+            }
+
+            .main-header p {
+                display: none;
+            }
+
+            .main-header h1 {
+                font-size: 1.1rem;
+                line-height: 1.35;
+            }
+
+            .brand-logo {
+                width: 36px;
+                height: 36px;
+                border-radius: 12px;
+                font-size: 14px;
+            }
+
+            .menu-btn span {
+                display: none;
+            }
+
             .chat-container {
-                height: calc(100vh - 250px);
-                min-height: 55vh;
+                height: auto;
+                flex: 1;
+                margin-top: 8px;
+                border-radius: 16px;
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .chat-composer {
+                margin: 8px 0 0;
+                padding: 10px;
+                border-radius: 16px;
             }
 
             #chat-form {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                gap: 8px;
+                align-items: center;
+            }
+
+            #user-input {
+                order: 0;
+                width: auto;
+                flex: 1 1 auto;
+                min-width: 0;
+                font-size: 15px;
+                padding: 12px 14px;
             }
 
             #chat-form > button,
             #chat-form > .ghost-btn {
                 flex: 0 0 auto;
-                min-width: 46px;
-                min-height: 46px;
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                min-height: 40px;
+                padding: 0;
+                border-radius: 999px;
             }
 
-            #user-input {
-                order: -1;
-                width: 100%;
-                flex: 1 1 100%;
+            #chat-form > button i,
+            #chat-form > .ghost-btn i {
+                margin: 0;
+                font-size: 14px;
+            }
+
+            #chat-form > .ghost-btn {
+                font-size: 0;
+            }
+
+            .welcome-copy {
+                display: none;
             }
 
             #top-menu {
@@ -568,9 +655,7 @@
             .action-btn,
             .chat-item-menu button,
             #top-menu button {
-                font-size: 14px;
-                padding-top: 11px;
-                padding-bottom: 11px;
+                font-size: 13px;
             }
         }
     </style>
@@ -671,7 +756,7 @@
 
             <main id="chat-messages" class="chat-container p-4 sm:p-6 overflow-y-auto flex flex-col gap-5 mt-3 bg-white border border-slate-200 rounded-2xl shadow-sm"></main>
 
-            <div class="my-3 p-3 sm:p-4 border border-slate-200 bg-white rounded-2xl shadow-sm">
+            <div class="chat-composer my-3 p-3 sm:p-4 border border-slate-200 bg-white rounded-2xl shadow-sm">
                 <form id="chat-form" class="flex gap-3 items-center">
                     <input id="file-input" type="file" accept="image/*,.html,text/html" multiple class="hidden">
                     <button type="button" onclick="triggerFileUpload()" class="ghost-btn !px-4 !py-3" title="העלאת קובץ">
@@ -1336,8 +1421,8 @@
             chatMessages.innerHTML = `
                 <div class="text-center text-slate-600 py-12">
                     <div class="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mb-4">✨</div>
-                    <h2 class="text-2xl font-semibold text-slate-900">ברוך הבא! כל הנתונים נשמרים בענן</h2>
-                    <p class="mt-2 max-w-2xl mx-auto">השיחות שלך נשמרות ב-Firebase Firestore תחת החשבון האישי שלך. אפשר להתחבר מכל מכשיר ולראות את ההיסטוריה.</p>
+                    <h2 class="text-xl sm:text-2xl font-semibold text-slate-900">ברוך הבא! כל הנתונים נשמרים בענן</h2>
+                    <p class="welcome-copy mt-2 max-w-2xl mx-auto">השיחות שלך נשמרות ב-Firebase Firestore תחת החשבון האישי שלך. אפשר להתחבר מכל מכשיר ולראות את ההיסטוריה.</p>
                 </div>
             `;
         }
@@ -1814,6 +1899,7 @@
                 renderWelcome();
                 authBanner.classList.remove('hidden');
                 appShell.classList.add('hidden');
+                document.body.classList.remove('app-active');
                 userChip.classList.add('hidden');
                 logoutButton.classList.add('hidden');
                 userEmail.textContent = '';
@@ -1823,6 +1909,7 @@
 
             authBanner.classList.add('hidden');
             appShell.classList.remove('hidden');
+            document.body.classList.add('app-active');
             userChip.classList.remove('hidden');
             logoutButton.classList.remove('hidden');
             userEmail.textContent = user.email || 'משתמש מחובר';
