@@ -345,6 +345,31 @@
             background: #eef2ff;
         }
 
+
+        .settings-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 70;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .settings-modal-overlay.show {
+            display: flex;
+        }
+
+        .settings-modal-card {
+            width: min(94vw, 420px);
+            background: #fff;
+            border: 1px solid #dbeafe;
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+        }
+
         .typing-min {
             display: inline-flex;
             align-items: center;
@@ -492,7 +517,7 @@
             }
 
             .chat-container {
-                height: calc(100vh - 390px);
+                height: calc(100vh - 200px);
                 min-height: 340px;
             }
 
@@ -507,13 +532,12 @@
             }
 
             .history-panel {
-                max-height: 200px;
-                border-radius: 20px;
+                display: none;
             }
 
             .chat-container {
-                height: auto;
-                min-height: 42vh;
+                height: calc(100vh - 250px);
+                min-height: 55vh;
             }
 
             #chat-form {
@@ -523,6 +547,8 @@
             #chat-form > button,
             #chat-form > .ghost-btn {
                 flex: 0 0 auto;
+                min-width: 46px;
+                min-height: 46px;
             }
 
             #user-input {
@@ -532,9 +558,19 @@
             }
 
             #top-menu {
-                width: min(92vw, 320px);
+                width: min(94vw, 340px);
                 left: 0;
                 right: auto;
+            }
+
+            .menu-btn,
+            .ghost-btn,
+            .action-btn,
+            .chat-item-menu button,
+            #top-menu button {
+                font-size: 14px;
+                padding-top: 11px;
+                padding-bottom: 11px;
             }
         }
     </style>
@@ -607,6 +643,12 @@
                             <span id="user-email"></span>
                         </div>
                         <div class="space-y-2 text-sm">
+                            <button onclick="createNewChat()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
+                                <i class="fa-solid fa-plus ml-2 text-indigo-600"></i> צ'אט חדש
+                            </button>
+                            <button onclick="openHtmlFilesPanel()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
+                                <i class="fa-solid fa-folder-open ml-2 text-indigo-600"></i> קבצי HTML
+                            </button>
                             <button onclick="openSettings()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
                                 <i class="fa-solid fa-gear ml-2 text-indigo-500"></i> הגדרות
                             </button>
@@ -664,6 +706,25 @@
             <div id="html-files-list" class="mt-3 max-h-[60vh] overflow-auto space-y-2"></div>
         </div>
     </div>
+    <div id="settings-modal" class="settings-modal-overlay" onclick="closeSettingsModal(event)">
+        <div class="settings-modal-card" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <h3 class="text-lg font-semibold text-slate-900">הגדרות חשבון</h3>
+                <button onclick="closeSettingsModal()" class="ghost-btn !py-1 !px-3 text-xs">סגור</button>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">אפשר לעדכן סיסמה דרך מייל איפוס של Firebase או למחוק את החשבון לצמיתות.</p>
+            <div class="space-y-2">
+                <button onclick="sendFirebasePasswordReset()" class="w-full text-right bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl p-3">
+                    <i class="fa-solid fa-key ml-2 text-indigo-600"></i> עדכון סיסמה (איפוס ב-Firebase)
+                </button>
+                <button onclick="deleteFirebaseAccount()" class="w-full text-right bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-xl p-3">
+                    <i class="fa-solid fa-user-xmark ml-2"></i> מחיקת חשבון (Firebase)
+                </button>
+            </div>
+            <p id="settings-status" class="text-xs text-slate-500 mt-3 min-h-[1.25rem]"></p>
+        </div>
+    </div>
+
     <div id="qr-banner" class="qr-banner-overlay" onclick="closeQrBanner(event)">
         <div class="qr-banner-card">
             <div class="flex items-center justify-between gap-2">
@@ -685,13 +746,16 @@
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
             onAuthStateChanged,
-            signOut
+            signOut,
+            sendPasswordResetEmail,
+            deleteUser
         } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
         import {
             getFirestore,
             collection,
             doc,
             deleteDoc,
+            getDocs,
             onSnapshot,
             orderBy,
             query,
@@ -757,6 +821,8 @@
         const qrBanner = document.getElementById('qr-banner');
         const qrBannerImage = document.getElementById('qr-banner-image');
         const qrBannerLink = document.getElementById('qr-banner-link');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsStatus = document.getElementById('settings-status');
         const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
         let isRecording = false;
@@ -1277,7 +1343,51 @@
         }
 
         function openSettings() {
-            alert('הגדרות יתווספו כאן בקרוב (תמיכה בעיצוב, מודל, ושפה).');
+            settingsStatus.textContent = '';
+            settingsModal.classList.add('show');
+            topMenu.classList.add('hidden-panel');
+        }
+
+        function closeSettingsModal(event) {
+            if (event && event.target !== settingsModal) return;
+            settingsModal.classList.remove('show');
+        }
+
+        async function sendFirebasePasswordReset() {
+            if (!currentUser?.email) {
+                settingsStatus.textContent = 'לא נמצא אימייל לחשבון המחובר.';
+                return;
+            }
+            settingsStatus.textContent = 'שולח מייל איפוס סיסמה...';
+            try {
+                await sendPasswordResetEmail(auth, currentUser.email);
+                settingsStatus.textContent = 'נשלח מייל איפוס סיסמה מ-Firebase. בדוק/בדקי את תיבת הדואר.';
+            } catch (error) {
+                console.error(error);
+                settingsStatus.textContent = 'שליחת מייל איפוס נכשלה. נסה/י שוב מאוחר יותר.';
+            }
+        }
+
+        async function deleteFirebaseAccount() {
+            if (!currentUser) return;
+            if (!confirm('למחוק את החשבון לצמיתות מ-Firebase? פעולה זו בלתי הפיכה.')) return;
+            settingsStatus.textContent = 'מוחק את נתוני המשתמש...';
+            try {
+                const chatsSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'chats'));
+                await Promise.all(chatsSnapshot.docs.map((chatDoc) => deleteDoc(chatDoc.ref)));
+                await deleteDoc(doc(db, 'users', currentUser.uid));
+                await deleteUser(currentUser);
+                settingsStatus.textContent = 'החשבון נמחק בהצלחה מ-Firebase.';
+                closeSettingsModal();
+                alert('החשבון נמחק בהצלחה.');
+            } catch (error) {
+                console.error(error);
+                if (error?.code === 'auth/requires-recent-login') {
+                    settingsStatus.textContent = 'נדרשת התחברות מחדש לפני מחיקה. התנתק/י והתחבר/י שוב ואז נסה/י.';
+                } else {
+                    settingsStatus.textContent = 'מחיקת החשבון נכשלה. נסה/י שוב.';
+                }
+            }
         }
 
         function openContact() {
@@ -1724,6 +1834,9 @@
         window.createNewChat = createNewChat;
         window.clearChat = clearChat;
         window.openSettings = openSettings;
+        window.closeSettingsModal = closeSettingsModal;
+        window.sendFirebasePasswordReset = sendFirebasePasswordReset;
+        window.deleteFirebaseAccount = deleteFirebaseAccount;
         window.openContact = openContact;
         window.openPremium = openPremium;
         window.shareChat = shareChat;
