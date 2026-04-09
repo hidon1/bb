@@ -21,7 +21,10 @@
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: radial-gradient(circle at top right, #dbeafe 0%, #f8fafc 45%, #eef2ff 100%);
+            background:
+                radial-gradient(circle at 8% 10%, rgba(99, 102, 241, 0.14) 0%, transparent 32%),
+                radial-gradient(circle at 95% 90%, rgba(20, 184, 166, 0.1) 0%, transparent 34%),
+                linear-gradient(160deg, #f8fbff 0%, #f7f8ff 45%, #f3f6ff 100%);
             color: #111827;
             margin: 0;
         }
@@ -46,11 +49,11 @@
             width: 300px;
             min-width: 250px;
             max-width: 320px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(14px);
-            border: 1px solid #dbeafe;
+            border: 1px solid #d9e5ff;
             border-radius: 24px;
-            box-shadow: 0 10px 28px rgba(30, 41, 59, 0.08);
+            box-shadow: 0 14px 34px rgba(30, 41, 59, 0.08);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -60,11 +63,12 @@
             width: 52px;
             height: 52px;
             border-radius: 14px;
-            background: #0f172a;
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+            box-shadow: 0 10px 24px rgba(79, 70, 229, 0.16);
+            border: 1px solid #d7defd;
             overflow: hidden;
             padding: 4px;
         }
@@ -73,6 +77,33 @@
             width: 100%;
             height: 100%;
             display: block;
+        }
+
+        .logo-draw-path {
+            stroke-dasharray: var(--path-length);
+            stroke-dashoffset: var(--path-length);
+        }
+
+        .brand-logo.run .logo-draw-path {
+            animation: logoDrawErase 3.8s cubic-bezier(0.4, 0, 0.2, 1) 1;
+        }
+
+        .auth-hero-title {
+            font-size: clamp(1.9rem, 4.4vw, 3rem);
+            line-height: 1.08;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(120deg, #1e1b4b, #0f766e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        @keyframes logoDrawErase {
+            0% { stroke-dashoffset: var(--path-length); }
+            34% { stroke-dashoffset: 0; }
+            64% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: calc(var(--path-length) * -1); }
         }
 
         .chat-workspace {
@@ -570,6 +601,10 @@
                 padding: 3px;
             }
 
+            .auth-hero-title {
+                font-size: clamp(1.6rem, 7vw, 2.1rem);
+            }
+
             .menu-btn span {
                 display: none;
             }
@@ -651,6 +686,23 @@
 </head>
 <body>
     <div id="auth-banner" class="max-w-5xl mx-auto mt-8 p-6 bg-white/95 border border-slate-200 rounded-3xl shadow-lg">
+        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+            <div class="brand-logo run" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
+                    <defs>
+                        <linearGradient id="brainGradAuth" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00d0ff"></stop>
+                            <stop offset="50%" stop-color="#7b61ff"></stop>
+                            <stop offset="100%" stop-color="#00f0b5"></stop>
+                        </linearGradient>
+                    </defs>
+                    <g transform="translate(210 210)">
+                        <path class="logo-draw-path" style="--path-length:1000;" d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z" fill="none" stroke="url(#brainGradAuth)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </g>
+                </svg>
+            </div>
+            <h1 class="auth-hero-title">יזם אתרים</h1>
+        </div>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="text-2xl font-semibold text-slate-900">התחברות לחשבון</h2>
@@ -699,19 +751,13 @@
         <div class="chat-workspace">
             <header class="main-header bg-white/90 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="brand-logo" aria-hidden="true">
+                    <div class="brand-logo run" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
                             <defs>
                                 <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#00d0ff">
-                                        <animate attributeName="stop-color" values="#00d0ff;#7b61ff;#00f0b5;#00d0ff" dur="7s" repeatCount="indefinite"/>
-                                    </stop>
-                                    <stop offset="50%" stop-color="#7b61ff">
-                                        <animate attributeName="stop-color" values="#7b61ff;#ff4fd8;#00d0ff;#7b61ff" dur="7s" repeatCount="indefinite"/>
-                                    </stop>
-                                    <stop offset="100%" stop-color="#00f0b5">
-                                        <animate attributeName="stop-color" values="#00f0b5;#00d0ff;#ffb347;#00f0b5" dur="7s" repeatCount="indefinite"/>
-                                    </stop>
+                                    <stop offset="0%" stop-color="#00d0ff"></stop>
+                                    <stop offset="50%" stop-color="#7b61ff"></stop>
+                                    <stop offset="100%" stop-color="#00f0b5"></stop>
                                 </linearGradient>
                                 <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
                                     <feGaussianBlur stdDeviation="4"/>
@@ -723,89 +769,24 @@
                                 </filter>
                             </defs>
                             <g transform="translate(210 210)">
-                                <animateTransform attributeName="transform" type="translate" values="210 210;210 204;210 210;210 216;210 210" dur="5s" repeatCount="indefinite"/>
-                                <path d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
+                                <path class="logo-draw-path" style="--path-length:1000;" d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
                                     fill="none"
                                     stroke="url(#brainGrad)"
-                                    stroke-width="10"
+                                    stroke-width="14"
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
-                                    pathLength="1000"
-                                    stroke-dasharray="1000"
-                                    stroke-dashoffset="1000"
                                     filter="url(#glow)">
-                                    <animate attributeName="stroke-dashoffset"
-                                        values="1000;0;0;-1000"
-                                        keyTimes="0;0.4;0.6;1"
-                                        dur="5.8s"
-                                        repeatCount="indefinite"/>
                                 </path>
 
-                                <g fill="none" stroke="url(#brainGrad)" stroke-width="4.5" stroke-linecap="round" filter="url(#softGlow)">
-                                    <path d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14"
-                                        pathLength="220" stroke-dasharray="220" stroke-dashoffset="220">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="220;0;0;-220"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M-25 -62 C-56 -72,-84 -63,-96 -40 C-104 -24,-101 -5,-79 8 C-62 17,-53 28,-57 46"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M-26 -22 C-56 -31,-82 -22,-92 -3 C-99 12,-90 28,-68 36 C-49 43,-41 56,-45 77"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M-22 22 C-46 15,-69 21,-79 37 C-88 51,-83 70,-61 81 C-43 90,-35 101,-36 116"
-                                        pathLength="170" stroke-dasharray="170" stroke-dashoffset="170">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="170;0;0;-170"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14"
-                                        pathLength="220" stroke-dasharray="220" stroke-dashoffset="220">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="220;0;0;-220"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M25 -62 C56 -72,84 -63,96 -40 C104 -24,101 -5,79 8 C62 17,53 28,57 46"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M26 -22 C56 -31,82 -22,92 -3 C99 12,90 28,68 36 C49 43,41 56,45 77"
-                                        pathLength="200" stroke-dasharray="200" stroke-dashoffset="200">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="200;0;0;-200"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
-                                    <path d="M22 22 C46 15,69 21,79 37 C88 51,83 70,61 81 C43 90,35 101,36 116"
-                                        pathLength="170" stroke-dasharray="170" stroke-dashoffset="170">
-                                        <animate attributeName="stroke-dashoffset"
-                                            values="170;0;0;-170"
-                                            keyTimes="0;0.4;0.6;1"
-                                            dur="5.8s" begin="0.3s"
-                                            repeatCount="indefinite"/>
-                                    </path>
+                                <g fill="none" stroke="url(#brainGrad)" stroke-width="6.5" stroke-linecap="round" filter="url(#softGlow)">
+                                    <path class="logo-draw-path" style="--path-length:220;" d="M-25 -96 C-54 -110,-92 -104,-106 -78 C-116 -58,-108 -34,-81 -27 C-56 -20,-44 -6,-49 14"></path>
+                                    <path class="logo-draw-path" style="--path-length:200;" d="M-25 -62 C-56 -72,-84 -63,-96 -40 C-104 -24,-101 -5,-79 8 C-62 17,-53 28,-57 46"></path>
+                                    <path class="logo-draw-path" style="--path-length:200;" d="M-26 -22 C-56 -31,-82 -22,-92 -3 C-99 12,-90 28,-68 36 C-49 43,-41 56,-45 77"></path>
+                                    <path class="logo-draw-path" style="--path-length:170;" d="M-22 22 C-46 15,-69 21,-79 37 C-88 51,-83 70,-61 81 C-43 90,-35 101,-36 116"></path>
+                                    <path class="logo-draw-path" style="--path-length:220;" d="M25 -96 C54 -110,92 -104,106 -78 C116 -58,108 -34,81 -27 C56 -20,44 -6,49 14"></path>
+                                    <path class="logo-draw-path" style="--path-length:200;" d="M25 -62 C56 -72,84 -63,96 -40 C104 -24,101 -5,79 8 C62 17,53 28,57 46"></path>
+                                    <path class="logo-draw-path" style="--path-length:200;" d="M26 -22 C56 -31,82 -22,92 -3 C99 12,90 28,68 36 C49 43,41 56,45 77"></path>
+                                    <path class="logo-draw-path" style="--path-length:170;" d="M22 22 C46 15,69 21,79 37 C88 51,83 70,61 81 C43 90,35 101,36 116"></path>
                                 </g>
                             </g>
                         </svg>
@@ -1000,6 +981,19 @@
         const qrBannerLink = document.getElementById('qr-banner-link');
         const settingsModal = document.getElementById('settings-modal');
         const settingsStatus = document.getElementById('settings-status');
+        const animatedLogos = Array.from(document.querySelectorAll('.brand-logo'));
+
+        function runLogoAnimation() {
+            animatedLogos.forEach((logo) => {
+                logo.classList.remove('run');
+                void logo.offsetWidth;
+                logo.classList.add('run');
+            });
+        }
+
+        runLogoAnimation();
+        setInterval(runLogoAnimation, 10000);
+
         function toggleMenu() {
             topMenu.classList.toggle('hidden-panel');
         }
