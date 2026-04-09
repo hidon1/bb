@@ -33,11 +33,13 @@
         .app-shell {
             max-width: 1700px;
             margin: 0 auto;
-            min-height: 100vh;
+            height: 100vh;
+            max-height: 100vh;
             display: flex;
             gap: 16px;
             padding: 14px;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         .history-panel {
@@ -83,7 +85,7 @@
         }
 
         .chat-container {
-            height: calc(100vh - 160px);
+            flex: 1;
             min-height: 0;
         }
 
