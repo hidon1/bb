@@ -882,6 +882,9 @@
             <button onclick="openContact()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
                 <i class="fa-solid fa-envelope ml-2 text-indigo-500"></i> יצירת קשר (מייל)
             </button>
+            <button onclick="openMotzarella()" class="w-full text-right border border-orange-200 rounded-xl p-3" style="background:linear-gradient(135deg,#fff7ed,#fef3c7);" onmouseover="this.style.background='linear-gradient(135deg,#fef3c7,#fff7ed)'" onmouseout="this.style.background='linear-gradient(135deg,#fff7ed,#fef3c7)'">
+                <i class="fa-solid fa-store ml-2 text-orange-500"></i> <strong style="color:#92400e;">מוצרלה</strong> <span style="color:#78350f;font-size:11px;">— ניהול מוצרים לאתר</span>
+            </button>
             <button onclick="openPremium()" class="w-full text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-3">
                 <i class="fa-solid fa-crown ml-2 text-amber-500"></i> מנוי פרימיום (בקרוב)
             </button>
@@ -948,6 +951,57 @@
                 </button>
             </div>
             <p id="settings-status" class="text-xs text-slate-500 mt-3 min-h-[1.25rem]"></p>
+        </div>
+    </div>
+
+    <!-- מודל מוצרלה -->
+    <div id="motzarella-modal" style="position:fixed;inset:0;z-index:70;background:rgba(15,23,42,0.55);display:none;align-items:center;justify-content:center;padding:16px;" onclick="closeMotzarellaModal(event)">
+        <div style="background:#fff;border-radius:24px;width:min(94vw,480px);padding:28px;box-shadow:0 20px 50px rgba(15,23,42,0.22);border:1px solid #fed7aa;" onclick="event.stopPropagation()">
+            <!-- כותרת -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#f97316,#fb923c);display:flex;align-items:center;justify-content:center;font-size:20px;">🧀</div>
+                    <div>
+                        <h3 style="margin:0;font-size:1.1rem;font-weight:700;color:#1c1917;">מוצרלה — ניהול מוצרים</h3>
+                        <p style="margin:0;font-size:12px;color:#78350f;">חבר חנות מוצרים לאתר שבנית</p>
+                    </div>
+                </div>
+                <button onclick="closeMotzarellaModal()" style="border:none;background:#f5f5f4;border-radius:999px;width:32px;height:32px;cursor:pointer;color:#64748b;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+
+            <!-- הסבר קצר -->
+            <p style="font-size:13px;color:#44403c;margin:0 0 20px;line-height:1.65;">מוצרלה היא מערכת לניהול מוצרים שמתחברת לאתר שלך בשורת קוד אחת. כשתבנה אתר כאן ב-יזם אתרים — פשוט הדבק את קוד הווידג׳ט בתוך הצ׳אט וה-AI יטמיע אותו אוטומטית בקוד.</p>
+
+            <!-- 3 שלבים -->
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
+                <div style="display:flex;align-items:flex-start;gap:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px 14px;">
+                    <div style="width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+                    <div>
+                        <strong style="font-size:13px;color:#1c1917;">פתח חשבון במוצרלה</strong>
+                        <p style="margin:3px 0 0;font-size:12px;color:#78350f;">הירשם בחינם בכתובת mozzarella.click — לוקח פחות מדקה.</p>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px 14px;">
+                    <div style="width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+                    <div>
+                        <strong style="font-size:13px;color:#1c1917;">הוסף את המוצרים שלך</strong>
+                        <p style="margin:3px 0 0;font-size:12px;color:#78350f;">הכנס שם, מחיר, תמונות ותיאור לכל מוצר במערכת.</p>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px 14px;">
+                    <div style="width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+                    <div>
+                        <strong style="font-size:13px;color:#1c1917;">העתק קוד ווידג׳ט → הדבק בצ׳אט</strong>
+                        <p style="margin:3px 0 0;font-size:12px;color:#78350f;">במוצרלה לחץ "חיבור לאתר" → העתק את קוד הווידג׳ט → חזור לכאן, פתח צ׳אט חדש ואמור ל-AI: <em>"בנה לי אתר עם הקוד הבא מוטמע בו: [הדבק קוד]"</em> — ה-AI יטפל בהכל.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- כפתור מעבר -->
+            <a href="https://mozzarella.click/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:14px;padding:14px 20px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+                <i class="fa-solid fa-store"></i>
+                פתח את מוצרלה ←
+            </a>
         </div>
     </div>
 
@@ -1213,7 +1267,12 @@
                 } else {
                     messageDiv.innerHTML = `
                         <div class="flex gap-3 items-start max-w-full w-full">
-                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-sm mt-1">י</div>
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex-shrink-0 flex items-center justify-center mt-1" style="padding:5px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="-200 -150 400 320" style="width:100%;height:100%;display:block;">
+                                    <path d="M0 -128 C-24 -140,-56 -139,-82 -124 C-106 -130,-132 -116,-143 -94 C-170 -85,-180 -54,-171 -30 C-190 -9,-190 27,-166 49 C-169 80,-147 108,-115 117 C-102 141,-73 154,-44 146 C-26 159,-8 162,0 152 C8 162,26 159,44 146 C73 154,102 141,115 117 C147 108,169 80,166 49 C190 27,190 -9,171 -30 C180 -54,170 -85,143 -94 C132 -116,106 -130,82 -124 C56 -139,24 -140,0 -128 Z"
+                                        fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
                             <div class="assistant-bubble message-bubble max-w-none">
                                 ${formatMessage(content)}
                             </div>
@@ -1558,6 +1617,17 @@
 
         function openPremium() {
             alert('מנוי פרימיום יושק בהמשך: שמירת ענן, תבניות מתקדמות וחיבורים נוספים.');
+        }
+
+        function openMotzarella() {
+            document.getElementById('motzarella-modal').style.display = 'flex';
+            topMenu.classList.add('hidden-panel');
+        }
+
+        function closeMotzarellaModal(event) {
+            const modal = document.getElementById('motzarella-modal');
+            if (event && event.target !== modal) return;
+            modal.style.display = 'none';
         }
 
         function exportChatHtml(chat) {
@@ -2254,6 +2324,8 @@
         window.deleteFirebaseAccount = deleteFirebaseAccount;
         window.openContact = openContact;
         window.openPremium = openPremium;
+        window.openMotzarella = openMotzarella;
+        window.closeMotzarellaModal = closeMotzarellaModal;
         window.shareChat = shareChat;
         window.shareSpecificChat = shareSpecificChat;
         window.openShareModal = openShareModal;
