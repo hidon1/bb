@@ -276,6 +276,49 @@
             padding: 10px;
         }
 
+        .code-editor-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 16px;
+        }
+
+        .code-editor-overlay.show {
+            display: flex;
+        }
+
+        .code-editor-card {
+            width: min(96vw, 1200px);
+            max-height: 92vh;
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #c7d2fe;
+            box-shadow: 0 22px 60px rgba(15, 23, 42, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .code-editor-textarea {
+            width: 100%;
+            min-height: 52vh;
+            resize: vertical;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            direction: ltr;
+            text-align: left;
+            background: #f8fafc;
+            color: #0f172a;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
         .status-pill {
             font-size: 10px;
             border-radius: 999px;
@@ -906,6 +949,30 @@
             <div id="html-files-list" class="mt-3 max-h-[60vh] overflow-auto space-y-2"></div>
         </div>
     </div>
+
+    <div id="code-editor-modal" class="code-editor-overlay" onclick="closeCodeEditor(event)">
+        <div class="code-editor-card" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-indigo-100 flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">עריכת קוד HTML</h3>
+                    <p class="text-xs text-slate-500">אפשר להוסיף, למחוק ולעדכן קוד. השמירה תעדכן גם את השיחה.</p>
+                </div>
+                <button onclick="closeCodeEditor()" class="ghost-btn !py-2 !px-4">סגור</button>
+            </div>
+            <div class="p-4 space-y-3 overflow-auto">
+                <textarea id="code-editor-textarea" class="code-editor-textarea" spellcheck="false" placeholder="כאן עורכים את קוד ה-HTML..."></textarea>
+                <div class="flex flex-wrap gap-2 justify-end">
+                    <button onclick="continueChatWithEditedCode()" class="ghost-btn !rounded-xl !px-4 !py-2">
+                        <i class="fa-solid fa-message ml-1"></i> המשך בצ'אט עם העריכה
+                    </button>
+                    <button id="save-code-editor-btn" onclick="saveEditedCode(this)" class="action-btn !rounded-xl !px-4 !py-2">
+                        <i class="fa-solid fa-floppy-disk"></i> שמור ועדכן קובץ
+                    </button>
+                </div>
+                <p id="code-editor-status" class="text-xs text-slate-500 min-h-[1rem]"></p>
+            </div>
+        </div>
+    </div>
     <!-- Share modal -->
     <div id="share-modal" style="position:fixed;inset:0;z-index:65;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;padding:16px;" onclick="closeShareModal(event)">
         <div style="background:#fff;border-radius:24px;width:min(92vw,400px);padding:24px;box-shadow:0 20px 50px rgba(15,23,42,0.2);border:1px solid #e0e7ff;" onclick="event.stopPropagation()">
@@ -1074,6 +1141,7 @@
         let pendingUploads = [];
         const pendingByChat = new Map();
         const htmlPublicLinks = new Map();
+        let editingCodeContext = null;
 
         const authBanner = document.getElementById('auth-banner');
         const appShell = document.getElementById('app-shell');
@@ -1096,6 +1164,9 @@
         const uploadPreview = document.getElementById('upload-preview');
         const htmlFilesModal = document.getElementById('html-files-modal');
         const htmlFilesList = document.getElementById('html-files-list');
+        const codeEditorModal = document.getElementById('code-editor-modal');
+        const codeEditorTextarea = document.getElementById('code-editor-textarea');
+        const codeEditorStatus = document.getElementById('code-editor-status');
         const qrBanner = document.getElementById('qr-banner');
         const qrBannerImage = document.getElementById('qr-banner-image');
         const qrBannerLink = document.getElementById('qr-banner-link');
@@ -1258,7 +1329,7 @@
             }
 
             chatMessages.innerHTML = '';
-            currentChat.messages.forEach(({ role, content }) => {
+            currentChat.messages.forEach(({ role, content }, messageIndex) => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
 
@@ -1274,7 +1345,7 @@
                                 </svg>
                             </div>
                             <div class="assistant-bubble message-bubble max-w-none">
-                                ${formatMessage(content)}
+                                ${formatMessage(content, messageIndex)}
                             </div>
                         </div>
                     `;
@@ -1305,11 +1376,12 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function formatMessage(content) {
+        function formatMessage(content, messageIndex) {
             const regex = /```(?:html)?\n([\s\S]*?)```/g;
             const parts = [];
             let lastIndex = 0;
             let match;
+            let blockIndex = 0;
 
             while ((match = regex.exec(content)) !== null) {
                 const textPart = content.slice(lastIndex, match.index);
@@ -1331,6 +1403,9 @@
                             <button onclick="downloadCode(this)" class="action-btn">
                                 <i class="fa-solid fa-download"></i> הורד
                             </button>
+                            <button onclick="openCodeEditor(this)" class="action-btn">
+                                <i class="fa-solid fa-pen-to-square"></i> ערוך
+                            </button>
                             <button onclick="createPublicHtmlLink(this)" class="action-btn">
                                 <i class="fa-solid fa-link"></i> צור קישור ציבורי
                             </button>
@@ -1348,9 +1423,10 @@
                             </button>
                         </div>
                     </div>
-                    <pre><code data-code-id="${codeId}">${escapedCode}</code></pre>
+                    <pre><code data-code-id="${codeId}" data-message-index="${messageIndex}" data-block-index="${blockIndex}">${escapedCode}</code></pre>
                 </div>`);
 
+                blockIndex++;
                 lastIndex = regex.lastIndex;
             }
 
@@ -1950,6 +2026,83 @@
             openMenuChatId = null;
             renderChatList();
         }
+
+        function replaceHtmlBlockInMessage(content, targetBlockIndex, nextHtmlCode) {
+            let seenBlocks = 0;
+            return String(content || '').replace(/```(?:html)?\n([\s\S]*?)```/g, (fullMatch) => {
+                if (seenBlocks === targetBlockIndex) {
+                    seenBlocks++;
+                    return `\`\`\`html\n${nextHtmlCode}\n\`\`\``;
+                }
+                seenBlocks++;
+                return fullMatch;
+            });
+        }
+
+        window.openCodeEditor = function(button) {
+            const card = button.closest('.code-card');
+            const codeElement = card?.querySelector('pre code');
+            if (!codeElement) return;
+            editingCodeContext = {
+                messageIndex: Number(codeElement.dataset.messageIndex),
+                blockIndex: Number(codeElement.dataset.blockIndex)
+            };
+            codeEditorTextarea.value = codeElement.textContent || '';
+            codeEditorStatus.textContent = 'אפשר לערוך את הקוד ואז לשמור.';
+            codeEditorModal.classList.add('show');
+            document.body.classList.add('app-active');
+            setTimeout(() => codeEditorTextarea.focus(), 0);
+        };
+
+        window.closeCodeEditor = function(event) {
+            if (event && event.target !== codeEditorModal) return;
+            codeEditorModal.classList.remove('show');
+            document.body.classList.remove('app-active');
+            editingCodeContext = null;
+        };
+
+        window.saveEditedCode = async function(button) {
+            const currentChat = getCurrentChat();
+            if (!currentChat || !editingCodeContext) return;
+            const { messageIndex, blockIndex } = editingCodeContext;
+            const msg = currentChat.messages?.[messageIndex];
+            if (!msg || msg.role !== 'assistant') return;
+
+            const newCode = codeEditorTextarea.value.trim();
+            if (!newCode) {
+                codeEditorStatus.textContent = 'לא ניתן לשמור קוד ריק.';
+                return;
+            }
+
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> שומר...';
+            try {
+                msg.content = replaceHtmlBlockInMessage(msg.content, blockIndex, newCode);
+                currentChat.updatedAt = Date.now();
+                await saveChatDoc(currentChat);
+                renderMessages();
+                codeEditorStatus.textContent = 'נשמר בהצלחה. הקוד עודכן בשיחה ובקובץ.';
+                setTimeout(() => {
+                    closeCodeEditor();
+                }, 220);
+            } catch (error) {
+                console.error('Save edited code failed:', error);
+                codeEditorStatus.textContent = 'השמירה נכשלה. נסה/י שוב.';
+            } finally {
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        };
+
+        window.continueChatWithEditedCode = function() {
+            const text = codeEditorTextarea.value.trim();
+            if (!text) return;
+            input.value = 'עדכנתי ידנית את קוד ה-HTML. המשך מכאן ושמור על כל העריכות שביצעתי.';
+            codeEditorStatus.textContent = 'הטקסט לשאלה הבאה הוכן. אפשר לשלוח הודעה ולהמשיך.';
+            closeCodeEditor();
+            input.focus();
+        };
 
         window.copyCode = function(button) {
             const text = button.closest('.code-card').querySelector('pre code').textContent;
