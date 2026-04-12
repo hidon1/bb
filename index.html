@@ -1768,35 +1768,60 @@
             if (s) s.textContent = '✓ הקובץ מורד';
         };
 
+        function formatChatDate(timestamp) {
+            const parsed = Number(timestamp);
+            if (!parsed) return 'ללא תאריך';
+            return new Date(parsed).toLocaleDateString('he-IL', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
         function collectHtmlExports() {
-            const exports = [];
-            chats.forEach(chat => {
-                (chat.messages || []).forEach((msg, index) => {
-                    if (msg.role !== 'assistant') return;
+            const sortedChats = [...chats].sort((a, b) => b.updatedAt - a.updatedAt);
+            return sortedChats.map(chat => {
+                const files = [];
+                const messages = Array.isArray(chat.messages) ? chat.messages : [];
+
+                for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex -= 1) {
+                    const msg = messages[messageIndex];
+                    if (msg.role !== 'assistant') continue;
                     const matches = msg.content.match(/```(?:html)?\n([\s\S]*?)```/g) || [];
-                    matches.forEach((block, blockIndex) => {
+
+                    for (let blockIndex = matches.length - 1; blockIndex >= 0; blockIndex -= 1) {
+                        const block = matches[blockIndex];
                         const clean = block.replace(/```(?:html)?\n?/g, '').replace(/```$/, '').trim();
-                        exports.push({
-                            name: `${chat.title || 'chat'}-${index + 1}-${blockIndex + 1}.html`,
+                        files.push({
+                            name: `${chat.title || 'chat'}-${messageIndex + 1}-${blockIndex + 1}.html`,
                             content: clean
                         });
-                    });
-                });
-            });
-            return exports;
+                    }
+                }
+
+                return {
+                    chatId: chat.id,
+                    chatTitle: chat.title || 'שיחה ללא כותרת',
+                    chatDate: formatChatDate(chat.updatedAt || chat.createdAt),
+                    files
+                };
+            }).filter(group => group.files.length);
         }
 
         function openHtmlFilesPanel() {
-            const files = collectHtmlExports();
-            if (!files.length) {
+            const groupedFiles = collectHtmlExports();
+            const flatFiles = [];
+
+            if (!groupedFiles.length) {
                 htmlFilesList.innerHTML = '<p class="text-sm text-slate-500">עדיין אין קבצי HTML בשיחות.</p>';
             } else {
-                htmlFilesList.innerHTML = files.map((file, i) => `
-                    ${(() => {
+                htmlFilesList.innerHTML = groupedFiles.map((group) => {
+                    const groupFilesMarkup = group.files.map((file) => {
+                        const i = flatFiles.push(file) - 1;
                         const panelKey = `panel-${simpleHash(file.content)}`;
                         const existingUrl = htmlPublicLinks.get(panelKey) || '';
                         return `
-                    <div class="border border-slate-200 rounded-xl p-3 space-y-2">
+                    <div class="border border-slate-200 rounded-xl p-3 space-y-2 bg-white">
                         <div class="text-sm text-slate-700 truncate">${escapeHtml(file.name)}</div>
                         <div class="public-link-row">
                             <button class="action-btn" onclick="downloadHtmlFromPanel(${i})"><i class="fa-solid fa-download"></i> הורד</button>
@@ -1812,12 +1837,21 @@
                             </button>
                         </div>
                         <p id="panel-public-status-${i}" class="text-xs text-slate-500">${existingUrl ? 'הקישור הציבורי זמין.' : 'עדיין לא נוצר קישור ציבורי.'}</p>
-                    </div>
-                        `;
-                    })()}
-                `).join('');
+                    </div>`;
+                    }).join('');
+
+                    return `
+                    <section class="border border-indigo-100 rounded-2xl p-3 space-y-3 bg-indigo-50/40">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-indigo-900 truncate">${escapeHtml(group.chatTitle)}</h4>
+                            <span class="text-xs text-indigo-700 whitespace-nowrap">${escapeHtml(group.chatDate)}</span>
+                        </div>
+                        <p class="text-xs text-indigo-600">קבצי HTML בשיחה: ${group.files.length}</p>
+                        <div class="space-y-2">${groupFilesMarkup}</div>
+                    </section>`;
+                }).join('');
             }
-            window.__htmlExports = files;
+            window.__htmlExports = flatFiles;
             htmlFilesModal.classList.remove('hidden');
             htmlFilesModal.classList.add('flex');
         }
