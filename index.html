@@ -893,11 +893,11 @@
                            style="transition:border-color 0.2s,box-shadow 0.2s;"
                            onfocus="this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)'" onblur="this.style.boxShadow='none'"
                            placeholder="תאר את האתר שתרצה לבנות או לשפר...">
-                    <button type="button" onclick="shareChat()" class="w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-md" style="background:linear-gradient(135deg,#10b981,#06b6d4);box-shadow:0 4px 14px rgba(16,185,129,0.28);" title="שתף צ'אט">
-                        <i class="fa-solid fa-share-nodes text-white text-xl"></i>
-                    </button>
                     <button type="submit" class="w-14 h-14 rounded-full flex items-center justify-center transition-all" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 4px 14px rgba(79,70,229,0.32);">
                         <i class="fa-solid fa-paper-plane text-white text-xl"></i>
+                    </button>
+                    <button type="button" onclick="shareChat()" class="w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-md" style="background:linear-gradient(135deg,#10b981,#06b6d4);box-shadow:0 4px 14px rgba(16,185,129,0.28);" title="שתף צ'אט">
+                        <i class="fa-solid fa-share-nodes text-white text-xl"></i>
                     </button>
                 </form>
                 <div id="upload-preview" class="mt-2"></div>
@@ -983,19 +983,16 @@
             <div id="share-chat-title" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:10px 14px;font-size:13px;color:#4f46e5;font-weight:600;margin-bottom:16px;"></div>
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button id="share-native-btn" onclick="shareNative()" style="display:none;border:none;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;">
-                    <i class="fa-solid fa-share-nodes" style="margin-left:10px;"></i>שתף עם האפליקציה
+                    <i class="fa-solid fa-share-nodes" style="margin-left:10px;"></i>שתף קישור עם האפליקציה
                 </button>
                 <button onclick="shareGmail()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#a5b4fc'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
-                    <i class="fa-brands fa-google" style="color:#ea4335;font-size:18px;"></i><span>שלח ב-Gmail</span>
+                    <i class="fa-brands fa-google" style="color:#ea4335;font-size:18px;"></i><span>שלח קישור ב-Gmail</span>
                 </button>
                 <button onclick="shareWhatsApp()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#86efac'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
-                    <i class="fa-brands fa-whatsapp" style="color:#25d366;font-size:18px;"></i><span>שלח ב-WhatsApp</span>
+                    <i class="fa-brands fa-whatsapp" style="color:#25d366;font-size:18px;"></i><span>שלח קישור ב-WhatsApp</span>
                 </button>
                 <button onclick="shareClipboard()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
-                    <i class="fa-solid fa-clipboard" style="color:#3b82f6;font-size:18px;"></i><span>העתק טקסט לגזור-הדבק</span>
-                </button>
-                <button onclick="shareDownload()" style="border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;text-align:right;background:#fff;color:#1e293b;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#fafafa';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
-                    <i class="fa-solid fa-file-arrow-down" style="color:#64748b;font-size:18px;"></i><span>הורד קובץ HTML מעוצב</span>
+                    <i class="fa-solid fa-clipboard" style="color:#3b82f6;font-size:18px;"></i><span>העתק קישור</span>
                 </button>
             </div>
             <p id="share-status" style="text-align:center;font-size:12px;color:#10b981;min-height:18px;margin-top:12px;font-weight:600;"></p>
@@ -1140,7 +1137,6 @@
         let openMenuChatId = null;
         let pendingUploads = [];
         const pendingByChat = new Map();
-        const htmlPublicLinks = new Map();
         let editingCodeContext = null;
 
         const authBanner = document.getElementById('auth-banner');
@@ -1191,14 +1187,38 @@
             return chats.find(chat => chat.id === activeChatId);
         }
 
+        function normalizePublicLinksMap(publicHtmlLinks) {
+            if (!publicHtmlLinks || typeof publicHtmlLinks !== 'object') return {};
+            return Object.entries(publicHtmlLinks).reduce((acc, [key, value]) => {
+                if (typeof key !== 'string') return acc;
+                const trimmed = String(value || '').trim();
+                if (!trimmed) return acc;
+                acc[key] = trimmed;
+                return acc;
+            }, {});
+        }
+
+        function getHtmlLinkKey(chatId, htmlContent) {
+            const safeChatId = String(chatId || '').trim() || 'chat';
+            return `${safeChatId}:${simpleHash(String(htmlContent || '').trim())}`;
+        }
+
+        function getStoredPublicLink(chat, htmlContent) {
+            if (!chat || !htmlContent) return '';
+            const key = getHtmlLinkKey(chat.id, htmlContent);
+            return chat.publicHtmlLinks?.[key] || '';
+        }
+
         async function saveChatDoc(chat) {
             if (!currentUser) return;
             const safeMessages = Array.isArray(chat.messages) ? chat.messages : [];
+            const safePublicHtmlLinks = normalizePublicLinksMap(chat.publicHtmlLinks);
             await setDoc(doc(db, 'users', currentUser.uid, 'chats', chat.id), {
                 title: chat.title || 'שיחה חדשה',
                 updatedAt: Date.now(),
                 createdAt: chat.createdAt || Date.now(),
-                messages: safeMessages
+                messages: safeMessages,
+                publicHtmlLinks: safePublicHtmlLinks
             }, { merge: true });
         }
 
@@ -1219,7 +1239,8 @@
                         title: data.title || 'שיחה חדשה',
                         updatedAt: Number(data.updatedAt) || Date.now(),
                         createdAt: Number(data.createdAt) || Date.now(),
-                        messages: Array.isArray(data.messages) ? data.messages : []
+                        messages: Array.isArray(data.messages) ? data.messages : [],
+                        publicHtmlLinks: normalizePublicLinksMap(data.publicHtmlLinks)
                     };
                 });
 
@@ -1250,7 +1271,7 @@
                 const pendingRequests = pendingByChat.get(chat.id) || 0;
 
                 const menu = openMenuChatId === chat.id ? `<div class="chat-item-menu" onclick="event.stopPropagation()">
-                    <button onclick="shareSpecificChat('${chat.id}')"><i class="fa-solid fa-share-nodes ml-1"></i> שתף במייל (Gmail)</button>
+                    <button onclick="shareSpecificChat('${chat.id}')"><i class="fa-solid fa-share-nodes ml-1"></i> שתף קישור (Gmail)</button>
                     <button class="danger" onclick="deleteChatById('${chat.id}')"><i class="fa-solid fa-trash ml-1"></i> מחק שיחה</button>
                 </div>` : '';
                 return `<div class="chat-item ${isActive ? 'active' : ''} ${pendingRequests ? 'loading' : ''}" onclick="switchChat('${chat.id}')">
@@ -1391,8 +1412,9 @@
 
                 const htmlCode = match[1].trim();
                 const escapedCode = escapeHtml(htmlCode);
-                const codeId = `html-${simpleHash(htmlCode)}`;
-                const existingUrl = htmlPublicLinks.get(codeId) || '';
+                const currentChat = getCurrentChat();
+                const codeId = getHtmlLinkKey(currentChat?.id, htmlCode);
+                const existingUrl = getStoredPublicLink(currentChat, htmlCode);
                 parts.push(`<div class="code-card">
                     <div class="code-header">
                         <span>קובץ HTML מוכן לשימוש</span>
@@ -1821,97 +1843,113 @@
             document.getElementById('share-modal').style.display = 'none';
         };
 
+        function extractLatestHtmlFromChat(chat) {
+            if (!chat?.messages?.length) return null;
+            for (let i = chat.messages.length - 1; i >= 0; i -= 1) {
+                const msg = chat.messages[i];
+                if (msg.role !== 'assistant') continue;
+                const blocks = String(msg.content || '').match(/```(?:html)?\n([\s\S]*?)```/g) || [];
+                if (!blocks.length) continue;
+                const lastBlock = blocks[blocks.length - 1];
+                const htmlContent = lastBlock.replace(/```(?:html)?\n?/g, '').replace(/```$/, '').trim();
+                if (htmlContent) return htmlContent;
+            }
+            return null;
+        }
+
+        async function ensurePublicLinkForChat(chat) {
+            if (!chat) throw new Error('לא נמצאה שיחה לשיתוף.');
+            if (!currentUser) throw new Error('יש להתחבר כדי לשתף קישור ציבורי.');
+            const htmlContent = extractLatestHtmlFromChat(chat);
+            if (!htmlContent) throw new Error('לא נמצא קובץ HTML לשיתוף בתוך השיחה.');
+
+            const key = getHtmlLinkKey(chat.id, htmlContent);
+            const existingUrl = chat.publicHtmlLinks?.[key];
+            if (existingUrl) return existingUrl;
+
+            const publicUrl = await uploadHtmlToFirebaseStorage(htmlContent, currentUser.uid);
+            chat.publicHtmlLinks = { ...(chat.publicHtmlLinks || {}), [key]: publicUrl };
+            chat.updatedAt = Date.now();
+            await saveChatDoc(chat);
+            if (chat.id === activeChatId) {
+                renderMessages();
+            }
+            return publicUrl;
+        }
+
         window.shareNative = async function() {
             const chat = _shareChatRef;
             if (!chat) return;
-            const html = exportChatHtml(chat);
-            const file = new File([html], `יזם-אתרים-${Date.now()}.html`, { type: 'text/html' });
+            const status = document.getElementById('share-status');
             try {
-                await navigator.share({ title: 'יזם אתרים | ' + chat.title, files: [file] });
-            } catch(e) { console.error(e); }
-        };
-
-        window.shareGmail = function() {
-            const chat = _shareChatRef;
-            if (!chat) return;
-            const s = document.getElementById('share-status');
-
-            // שלב 1: הורדת הקובץ מיד
-            window.shareDownload();
-
-            // שלב 2: בונים גוף קצר (ללא קוד) כדי לא לחרוג מגבולות URL
-            const lines = [];
-            lines.push(`⚡ יזם אתרים — ${chat.title}`);
-            lines.push('━'.repeat(40));
-            lines.push('');
-            lines.push('📎 הקובץ המלא (HTML) הורד אוטומטית לתיקיית ההורדות — יש לצרפו למייל.');
-            lines.push('');
-            lines.push('תוכן השיחה (טקסט):');
-            lines.push('');
-
-            let bodyLen = lines.join('\n').length;
-            for (const msg of chat.messages) {
-                const isUser = msg.role === 'user';
-                const label = isUser ? '👤 אתה:' : '🤖 יזם אתרים:';
-                // הסרת קוד HTML מהטקסט
-                let text = msg.content.replace(/```(?:html)?\n[\s\S]*?```/g, '[קוד HTML בקובץ המצורף]').trim();
-                // קיצור אם ארוך מדי
-                if (text.length > 300) text = text.slice(0, 300) + '…';
-                const block = `${label}\n${text}\n`;
-                if (bodyLen + block.length > 1800) {
-                    lines.push('… (שאר השיחה בקובץ המצורף)');
-                    break;
-                }
-                lines.push(block);
-                bodyLen += block.length;
+                if (status) status.textContent = 'יוצר קישור קבוע לשיתוף...';
+                const publicUrl = await ensurePublicLinkForChat(chat);
+                await navigator.share({
+                    title: 'יזם אתרים | ' + chat.title,
+                    text: `קישור לקובץ HTML:\n${publicUrl}`,
+                    url: publicUrl
+                });
+                if (status) status.textContent = '✓ הקישור שותף בהצלחה';
+            } catch (e) {
+                console.error(e);
+                if (status) status.textContent = `שיתוף נכשל: ${e?.message || 'שגיאה לא ידועה'}`;
             }
+        };
 
-            lines.push('━'.repeat(40));
-            lines.push('נשלח מיזם אתרים • AI לבניית אתרים');
-
-            const subject = encodeURIComponent('⚡ יזם אתרים — ' + chat.title);
-            const body = encodeURIComponent(lines.join('\n'));
-
-            // שלב 3: פתיחת Gmail אחרי 600ms (כדי לתת לדפדפן להתחיל הורדה)
-            setTimeout(() => {
+        window.shareGmail = async function() {
+            const chat = _shareChatRef;
+            if (!chat) return;
+            const s = document.getElementById('share-status');
+            try {
+                if (s) s.textContent = 'יוצר קישור קבוע לשיתוף...';
+                const publicUrl = await ensurePublicLinkForChat(chat);
+                const subject = encodeURIComponent('⚡ יזם אתרים — ' + chat.title);
+                const bodyText = [
+                    `שלום,`,
+                    '',
+                    'מצורף קישור קבוע לקובץ ה-HTML:',
+                    publicUrl,
+                    '',
+                    'נשלח מיזם אתרים • AI לבניית אתרים'
+                ].join('\n');
+                const body = encodeURIComponent(bodyText);
                 window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
-            }, 600);
-
-            if (s) s.textContent = '✓ הקובץ מורד — Gmail ייפתח בעוד שנייה';
+                if (s) s.textContent = '✓ Gmail נפתח עם קישור ציבורי לקובץ';
+            } catch (error) {
+                console.error(error);
+                if (s) s.textContent = `שגיאה בשיתוף: ${error?.message || 'לא ידוע'}`;
+            }
         };
 
-        window.shareWhatsApp = function() {
+        window.shareWhatsApp = async function() {
             const chat = _shareChatRef;
             if (!chat) return;
-            const text = buildPlainTextExport(chat);
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
             const s = document.getElementById('share-status');
-            if (s) s.textContent = '✓ WhatsApp נפתח';
+            try {
+                if (s) s.textContent = 'יוצר קישור קבוע לשיתוף...';
+                const publicUrl = await ensurePublicLinkForChat(chat);
+                const text = `⚡ ${chat.title}\nקישור ציבורי לקובץ HTML:\n${publicUrl}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                if (s) s.textContent = '✓ WhatsApp נפתח עם קישור';
+            } catch (error) {
+                console.error(error);
+                if (s) s.textContent = `שגיאה בשיתוף: ${error?.message || 'לא ידוע'}`;
+            }
         };
 
-        window.shareClipboard = function() {
+        window.shareClipboard = async function() {
             const chat = _shareChatRef;
             if (!chat) return;
-            const text = buildPlainTextExport(chat);
-            navigator.clipboard.writeText(text).then(() => {
+            try {
+                const publicUrl = await ensurePublicLinkForChat(chat);
+                await navigator.clipboard.writeText(publicUrl);
                 const s = document.getElementById('share-status');
-                if (s) s.textContent = '✓ הטקסט הועתק ללוח';
-            });
-        };
-
-        window.shareDownload = function() {
-            const chat = _shareChatRef;
-            if (!chat) return;
-            const html = exportChatHtml(chat);
-            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `יזם-אתרים-${chat.title.slice(0,20).replace(/\s+/g,'_')}.html`;
-            a.click();
-            URL.revokeObjectURL(url);
-            const s = document.getElementById('share-status');
-            if (s) s.textContent = '✓ הקובץ מורד';
+                if (s) s.textContent = '✓ הקישור הועתק ללוח';
+            } catch (error) {
+                console.error(error);
+                const s = document.getElementById('share-status');
+                if (s) s.textContent = `העתקה נכשלה: ${error?.message || 'לא ידוע'}`;
+            }
         };
 
         function formatChatDate(timestamp) {
@@ -1939,6 +1977,7 @@
                         const block = matches[blockIndex];
                         const clean = block.replace(/```(?:html)?\n?/g, '').replace(/```$/, '').trim();
                         files.push({
+                            chatId: chat.id,
                             name: `${chat.title || 'chat'}-${messageIndex + 1}-${blockIndex + 1}.html`,
                             content: clean
                         });
@@ -1964,8 +2003,8 @@
                 htmlFilesList.innerHTML = groupedFiles.map((group) => {
                     const groupFilesMarkup = group.files.map((file) => {
                         const i = flatFiles.push(file) - 1;
-                        const panelKey = `panel-${simpleHash(file.content)}`;
-                        const existingUrl = htmlPublicLinks.get(panelKey) || '';
+                        const activeChat = chats.find(chat => chat.id === group.chatId);
+                        const existingUrl = getStoredPublicLink(activeChat, file.content);
                         return `
                     <div class="border border-slate-200 rounded-xl p-3 space-y-2 bg-white">
                         <div class="text-sm text-slate-700 truncate">${escapeHtml(file.name)}</div>
@@ -2166,8 +2205,12 @@
 
             try {
                 const publicUrl = await uploadHtmlToFirebaseStorage(htmlContent, currentUser.uid);
-                const codeId = codeElement.dataset.codeId || `html-${simpleHash(htmlContent)}`;
-                htmlPublicLinks.set(codeId, publicUrl);
+                const codeId = codeElement.dataset.codeId || getHtmlLinkKey(getCurrentChat()?.id, htmlContent);
+                const currentChat = getCurrentChat();
+                if (currentChat) {
+                    currentChat.publicHtmlLinks = { ...(currentChat.publicHtmlLinks || {}), [codeId]: publicUrl };
+                    await saveChatDoc(currentChat);
+                }
                 if (linkInput) linkInput.value = publicUrl;
                 if (status) status.textContent = 'הצלחה! התקבל קישור ציבורי תקין.';
                 if (copyLinkBtn) copyLinkBtn.disabled = false;
@@ -2228,8 +2271,12 @@
 
             try {
                 const publicUrl = await uploadHtmlToFirebaseStorage(file.content, currentUser.uid);
-                const panelKey = `panel-${simpleHash(file.content)}`;
-                htmlPublicLinks.set(panelKey, publicUrl);
+                const chatForFile = chats.find(chat => chat.id === file.chatId);
+                if (chatForFile) {
+                    const panelKey = getHtmlLinkKey(chatForFile.id, file.content);
+                    chatForFile.publicHtmlLinks = { ...(chatForFile.publicHtmlLinks || {}), [panelKey]: publicUrl };
+                    await saveChatDoc(chatForFile);
+                }
                 if (input) input.value = publicUrl;
                 if (copyBtn) copyBtn.disabled = false;
                 if (qrBtn) qrBtn.disabled = false;
