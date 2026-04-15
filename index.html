@@ -946,6 +946,9 @@
                 <h3 class="text-lg font-semibold text-slate-900">תיקיית קבצי HTML</h3>
                 <button onclick="closeHtmlFilesPanel()" class="ghost-btn">סגור</button>
             </div>
+            <div class="mt-3">
+                <input id="html-files-search" type="search" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="חיפוש לפי שם קובץ HTML...">
+            </div>
             <div id="html-files-list" class="mt-3 max-h-[60vh] overflow-auto space-y-2"></div>
         </div>
     </div>
@@ -1077,6 +1080,11 @@
             </div>
             <img id="qr-banner-image" class="qr-banner-image" alt="QR Code">
             <p id="qr-banner-link" class="text-xs text-slate-500 break-all"></p>
+            <div class="flex justify-end">
+                <button id="qr-download-btn" onclick="downloadQrImage()" class="action-btn">
+                    <i class="fa-solid fa-image"></i> הורד תמונה
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1160,6 +1168,7 @@
         const uploadPreview = document.getElementById('upload-preview');
         const htmlFilesModal = document.getElementById('html-files-modal');
         const htmlFilesList = document.getElementById('html-files-list');
+        const htmlFilesSearch = document.getElementById('html-files-search');
         const codeEditorModal = document.getElementById('code-editor-modal');
         const codeEditorTextarea = document.getElementById('code-editor-textarea');
         const codeEditorStatus = document.getElementById('code-editor-status');
@@ -1198,6 +1207,59 @@
             }, {});
         }
 
+        function normalizeHtmlFileNamesMap(htmlFileNames) {
+            if (!htmlFileNames || typeof htmlFileNames !== 'object') return {};
+            return Object.entries(htmlFileNames).reduce((acc, [key, value]) => {
+                if (typeof key !== 'string') return acc;
+                const cleanName = String(value || '').trim();
+                if (!cleanName) return acc;
+                acc[key] = cleanName;
+                return acc;
+            }, {});
+        }
+
+        function getSafeFileBaseName(chat) {
+            const raw = String(chat?.title || '').trim() || 'קובץ HTML';
+            return raw.replace(/[\\/:*?"<>|]/g, '-').slice(0, 60).trim() || 'קובץ HTML';
+        }
+
+        function buildHtmlFilesForChat(chat) {
+            if (!chat) return [];
+            const messages = Array.isArray(chat.messages) ? chat.messages : [];
+            const files = [];
+            let runningIndex = 0;
+            for (let messageIndex = 0; messageIndex < messages.length; messageIndex += 1) {
+                const msg = messages[messageIndex];
+                if (msg.role !== 'assistant') continue;
+                const matches = String(msg.content || '').match(/```(?:html)?\n([\s\S]*?)```/g) || [];
+                for (let blockIndex = 0; blockIndex < matches.length; blockIndex += 1) {
+                    const block = matches[blockIndex];
+                    const clean = block.replace(/```(?:html)?\n?/g, '').replace(/```$/, '').trim();
+                    if (!clean) continue;
+                    const key = getHtmlLinkKey(chat.id, clean);
+                    const version = runningIndex + 1;
+                    const baseName = getSafeFileBaseName(chat);
+                    const defaultName = `${baseName}${version > 1 ? ' ' + version : ''}`;
+                    files.push({
+                        chatId: chat.id,
+                        key,
+                        content: clean,
+                        messageIndex,
+                        blockIndex,
+                        order: runningIndex,
+                        fileNameNoExt: chat.htmlFileNames?.[key] || defaultName
+                    });
+                    runningIndex += 1;
+                }
+            }
+            return files;
+        }
+
+        function ensureFileNameWithExt(name) {
+            const trimmed = String(name || '').trim() || 'קובץ HTML';
+            return trimmed.toLowerCase().endsWith('.html') ? trimmed : `${trimmed}.html`;
+        }
+
         function getHtmlLinkKey(chatId, htmlContent) {
             const safeChatId = String(chatId || '').trim() || 'chat';
             return `${safeChatId}:${simpleHash(String(htmlContent || '').trim())}`;
@@ -1218,7 +1280,8 @@
                 updatedAt: Date.now(),
                 createdAt: chat.createdAt || Date.now(),
                 messages: safeMessages,
-                publicHtmlLinks: safePublicHtmlLinks
+                publicHtmlLinks: safePublicHtmlLinks,
+                htmlFileNames: normalizeHtmlFileNamesMap(chat.htmlFileNames)
             }, { merge: true });
         }
 
@@ -1240,7 +1303,8 @@
                         updatedAt: Number(data.updatedAt) || Date.now(),
                         createdAt: Number(data.createdAt) || Date.now(),
                         messages: Array.isArray(data.messages) ? data.messages : [],
-                        publicHtmlLinks: normalizePublicLinksMap(data.publicHtmlLinks)
+                        publicHtmlLinks: normalizePublicLinksMap(data.publicHtmlLinks),
+                        htmlFileNames: normalizeHtmlFileNamesMap(data.htmlFileNames)
                     };
                 });
 
@@ -1415,9 +1479,10 @@
                 const currentChat = getCurrentChat();
                 const codeId = getHtmlLinkKey(currentChat?.id, htmlCode);
                 const existingUrl = getStoredPublicLink(currentChat, htmlCode);
+                const fileName = ensureFileNameWithExt(currentChat?.htmlFileNames?.[codeId] || getSafeFileBaseName(currentChat));
                 parts.push(`<div class="code-card">
                     <div class="code-header">
-                        <span>קובץ HTML מוכן לשימוש</span>
+                        <span>קובץ HTML מוכן לשימוש: <button class="underline decoration-dotted" onclick="renameHtmlFileFromCode(this)" title="שינוי שם קובץ">${escapeHtml(fileName)}</button></span>
                         <div class="code-actions">
                             <button onclick="copyCode(this)" class="action-btn">
                                 <i class="fa-solid fa-copy"></i> העתק
@@ -1963,51 +2028,35 @@
         }
 
         function collectHtmlExports() {
-            const sortedChats = [...chats].sort((a, b) => b.updatedAt - a.updatedAt);
-            return sortedChats.map(chat => {
-                const files = [];
-                const messages = Array.isArray(chat.messages) ? chat.messages : [];
-
-                for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex -= 1) {
-                    const msg = messages[messageIndex];
-                    if (msg.role !== 'assistant') continue;
-                    const matches = msg.content.match(/```(?:html)?\n([\s\S]*?)```/g) || [];
-
-                    for (let blockIndex = matches.length - 1; blockIndex >= 0; blockIndex -= 1) {
-                        const block = matches[blockIndex];
-                        const clean = block.replace(/```(?:html)?\n?/g, '').replace(/```$/, '').trim();
-                        files.push({
-                            chatId: chat.id,
-                            name: `${chat.title || 'chat'}-${messageIndex + 1}-${blockIndex + 1}.html`,
-                            content: clean
-                        });
-                    }
-                }
-
-                return {
-                    chatId: chat.id,
+            return [...chats]
+                .sort((a, b) => b.updatedAt - a.updatedAt)
+                .flatMap((chat) => buildHtmlFilesForChat(chat).map((file) => ({
+                    ...file,
+                    name: ensureFileNameWithExt(file.fileNameNoExt),
                     chatTitle: chat.title || 'שיחה ללא כותרת',
                     chatDate: formatChatDate(chat.updatedAt || chat.createdAt),
-                    files
-                };
-            }).filter(group => group.files.length);
+                    updatedAt: chat.updatedAt || chat.createdAt
+                })))
+                .sort((a, b) => b.updatedAt - a.updatedAt || b.order - a.order);
         }
 
-        function openHtmlFilesPanel() {
-            const groupedFiles = collectHtmlExports();
-            const flatFiles = [];
+        function renderHtmlFilesPanel(files) {
+            window.__htmlExports = files;
+            if (!files.length) {
+                htmlFilesList.innerHTML = '<p class="text-sm text-slate-500">לא נמצאו קבצי HTML לפי החיפוש.</p>';
+                return;
+            }
 
-            if (!groupedFiles.length) {
-                htmlFilesList.innerHTML = '<p class="text-sm text-slate-500">עדיין אין קבצי HTML בשיחות.</p>';
-            } else {
-                htmlFilesList.innerHTML = groupedFiles.map((group) => {
-                    const groupFilesMarkup = group.files.map((file) => {
-                        const i = flatFiles.push(file) - 1;
-                        const activeChat = chats.find(chat => chat.id === group.chatId);
-                        const existingUrl = getStoredPublicLink(activeChat, file.content);
-                        return `
-                    <div class="border border-slate-200 rounded-xl p-3 space-y-2 bg-white">
-                        <div class="text-sm text-slate-700 truncate">${escapeHtml(file.name)}</div>
+            htmlFilesList.innerHTML = files.map((file, i) => {
+                const activeChat = chats.find(chat => chat.id === file.chatId);
+                const existingUrl = getStoredPublicLink(activeChat, file.content);
+                return `
+                    <section class="border border-slate-200 rounded-xl p-3 space-y-2 bg-white">
+                        <div class="flex items-center justify-between gap-2">
+                            <button class="text-sm text-slate-700 truncate underline decoration-dotted" onclick="renameHtmlFileFromPanel(${i})">${escapeHtml(file.name)}</button>
+                            <span class="text-xs text-slate-500 whitespace-nowrap">${escapeHtml(file.chatDate)}</span>
+                        </div>
+                        <p class="text-xs text-slate-500">שיחה: ${escapeHtml(file.chatTitle)}</p>
                         <div class="public-link-row">
                             <button class="action-btn" onclick="downloadHtmlFromPanel(${i})"><i class="fa-solid fa-download"></i> הורד</button>
                             <button class="action-btn" onclick="createPublicLinkFromPanel(${i}, this)"><i class="fa-solid fa-link"></i> צור קישור ציבורי</button>
@@ -2022,21 +2071,14 @@
                             </button>
                         </div>
                         <p id="panel-public-status-${i}" class="text-xs text-slate-500">${existingUrl ? 'הקישור הציבורי זמין.' : 'עדיין לא נוצר קישור ציבורי.'}</p>
-                    </div>`;
-                    }).join('');
-
-                    return `
-                    <section class="border border-indigo-100 rounded-2xl p-3 space-y-3 bg-indigo-50/40">
-                        <div class="flex items-center justify-between gap-2">
-                            <h4 class="text-sm font-semibold text-indigo-900 truncate">${escapeHtml(group.chatTitle)}</h4>
-                            <span class="text-xs text-indigo-700 whitespace-nowrap">${escapeHtml(group.chatDate)}</span>
-                        </div>
-                        <p class="text-xs text-indigo-600">קבצי HTML בשיחה: ${group.files.length}</p>
-                        <div class="space-y-2">${groupFilesMarkup}</div>
                     </section>`;
-                }).join('');
-            }
-            window.__htmlExports = flatFiles;
+            }).join('');
+        }
+
+        function openHtmlFilesPanel() {
+            const flatFiles = collectHtmlExports();
+            htmlFilesSearch.value = '';
+            renderHtmlFilesPanel(flatFiles);
             htmlFilesModal.classList.remove('hidden');
             htmlFilesModal.classList.add('flex');
         }
@@ -2053,10 +2095,47 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = file.name;
+            link.download = ensureFileNameWithExt(file.name);
             link.click();
             URL.revokeObjectURL(url);
         }
+
+        async function setHtmlFileName(chatId, fileKey, nextName) {
+            const chat = chats.find((item) => item.id === chatId);
+            if (!chat) return;
+            chat.htmlFileNames = {
+                ...(chat.htmlFileNames || {}),
+                [fileKey]: String(nextName || '').trim()
+            };
+            chat.updatedAt = Date.now();
+            await saveChatDoc(chat);
+        }
+
+        window.renameHtmlFileFromCode = async function(button) {
+            const code = button.closest('.code-card')?.querySelector('pre code');
+            const chat = getCurrentChat();
+            if (!code || !chat) return;
+            const codeKey = code.dataset.codeId;
+            const currentName = ensureFileNameWithExt(chat.htmlFileNames?.[codeKey] || getSafeFileBaseName(chat));
+            const nextName = prompt('שם חדש לקובץ ה-HTML:', currentName);
+            if (nextName === null) return;
+            const cleanName = nextName.replace(/\.html$/i, '').trim();
+            if (!cleanName) return;
+            await setHtmlFileName(chat.id, codeKey, cleanName);
+            renderMessages();
+            renderChatList();
+        };
+
+        window.renameHtmlFileFromPanel = async function(index) {
+            const file = (window.__htmlExports || [])[index];
+            if (!file) return;
+            const nextName = prompt('שם חדש לקובץ ה-HTML:', file.name);
+            if (nextName === null) return;
+            const cleanName = nextName.replace(/\.html$/i, '').trim();
+            if (!cleanName) return;
+            await setHtmlFileName(file.chatId, file.key, cleanName);
+            openHtmlFilesPanel();
+        };
 
         function shareSpecificChat(chatId) {
             const chat = chats.find(c => c.id === chatId);
@@ -2317,6 +2396,15 @@
             qrBanner.classList.add('show');
         }
 
+        window.downloadQrImage = function() {
+            const imageUrl = qrBannerImage.getAttribute('src');
+            if (!imageUrl) return;
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `qr-${Date.now()}.png`;
+            link.click();
+        };
+
         window.closeQrBanner = function(event) {
             if (event && event.target !== qrBanner && !event.target.closest('.ghost-btn')) return;
             qrBanner.classList.remove('show');
@@ -2396,6 +2484,14 @@
             pendingUploads = [...pendingUploads, ...files];
             renderUploadPreview();
             fileInput.value = '';
+        });
+        htmlFilesSearch.addEventListener('input', () => {
+            const q = htmlFilesSearch.value.trim().toLowerCase();
+            const allFiles = collectHtmlExports();
+            const filtered = q
+                ? allFiles.filter((file) => String(file.name || '').toLowerCase().includes(q))
+                : allFiles;
+            renderHtmlFilesPanel(filtered);
         });
         document.addEventListener('click', () => {
             if (openMenuChatId) {
